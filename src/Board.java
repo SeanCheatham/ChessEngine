@@ -19,6 +19,8 @@ public class Board {
     public static final int[] BLACKPIECES= {7,8,9,10,11,12};
     // Stack to keep track of moves
     public Stack<Integer> moves;
+    // Counter to keep track of move
+    public int moveCount;
 
     public Board(){
         // 120 bit board is setup as follows:
@@ -71,14 +73,17 @@ public class Board {
         sideToMove = 0;
         result = -1;
         castling = new int[] {1,1,1,1};
+        enPassant = -1;
         moves = new Stack<Integer>();
+        moveCount = 0;
     }
 
     public void move(int from, int to){
+        doMove(from,to);
         System.out.println("(" + squares[from] + ")"
                 + (from-20)%10 + "," + (from-20)/10
                 + ((squares[to] != 0)?" X ":" -> ")
-                + "(" + squares[from] + ")"
+                + "(" + squares[to] + ")"
                 + (to-20)%10 + "," + (to-20)/10);
         if(squares[to] == 6) result = 1;
         if(squares[to] == 12) result = 0;
@@ -86,6 +91,37 @@ public class Board {
         squares[from] = 0;
         if(sideToMove == 0) sideToMove = 1;
         else sideToMove = 0;
+    }
+
+    public void doMove(int from, int to){
+        moves.push(squares[from]);
+        moves.push(from);
+        moves.push(squares[to]);
+        moves.push(to);
+        moves.push(castling[0]);
+        moves.push(castling[1]);
+        moves.push(castling[2]);
+        moves.push(castling[3]);
+        moves.push(enPassant);
+        moves.push(moveCount);
+        moveCount++;
+    }
+
+    public void undoMove(){
+        if(moveCount < 0) return;
+        this.moveCount = moves.pop();
+        this.enPassant = moves.pop();
+        this.castling[3] = moves.pop();
+        this.castling[2] = moves.pop();
+        this.castling[1] = moves.pop();
+        this.castling[0] = moves.pop();
+        int to = moves.pop();
+        int toSq = moves.pop();
+        int from = moves.pop();
+        int fromSq = moves.pop();
+        this.squares[from] = fromSq;
+        this.squares[to] = toSq;
+        moveCount--;
     }
 
     public String toString(){
