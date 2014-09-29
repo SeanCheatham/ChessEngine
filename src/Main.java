@@ -6,6 +6,4 @@ public class Main {
         System.out.println(b.toString());
         System.out.println(b.evaluate());
     }
-
-    // Tes
 }
