@@ -2,9 +2,6 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
 
-/**
- * Created by Sean on 9/27/2014.
- */
 public class Board {
     // Array of integers to represent piece types
     public int[] squares;

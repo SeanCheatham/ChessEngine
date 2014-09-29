@@ -1,6 +1,4 @@
-/**
- * Created by Sean on 9/27/2014.
- */
+
 public class Main {
     public static void main(String[] args){
         Board b = new Board();
