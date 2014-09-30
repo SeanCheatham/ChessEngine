@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.Stack;
 
 public class Board {
@@ -97,6 +96,10 @@ public class Board {
     }
 
     public void move(Move m){
+        // Set en passant square if applicable
+        if(m.fromPiece == 1 && m.from-m.to == 20) enPassant = m.from-10;
+        if(m.fromPiece == 7 && m.to-m.from == 20) enPassant = m.from+10;
+        // Push the move information onto a stack
         moves.push(m.fromPiece);
         moves.push(m.from);
         moves.push(m.toPiece);
@@ -107,11 +110,20 @@ public class Board {
         moves.push(castling[3]);
         moves.push(enPassant);
         moves.push(moveCount+1);
+        // Increment the move counter
         moveCount++;
+        // King was captured, so set the result
         if(m.toPiece == 6) result = 1;
         if(m.toPiece == 12) result = 0;
+        // Do en passant if applicable
+        if(m.fromPiece == 1 && m.to == enPassant) squares[m.to-10] = 0;
+        if(m.fromPiece == 7 && m.to == enPassant) squares[m.to+10] = 0;
+        // Reset en passant square
+        enPassant = -1;
+        // Move the pieces
         squares[m.to] = m.fromPiece;
         squares[m.from] = 0;
+        // Switch the side to move
         sideToMove = 1 - sideToMove;
         // Automatically promote to queen
         if(m.fromPiece == 1 && m.to >= 21 && m.to <= 28) squares[m.to] = 5;
@@ -119,7 +131,9 @@ public class Board {
     }
 
     public void undoMove(){
+        // If for some reason our move count is negative, just return
         if(moveCount < 0) return;
+        // Pop the last move off the stack
         this.moveCount = moves.pop()-1;
         this.enPassant = moves.pop();
         this.castling[3] = moves.pop();
@@ -130,8 +144,13 @@ public class Board {
         int toSq = moves.pop();
         int from = moves.pop();
         int fromSq = moves.pop();
+        // Move the pieces back to their original locations
         this.squares[from] = fromSq;
         this.squares[to] = toSq;
+        // If previous move was en passant, reset the captured piece
+        if(to == enPassant && fromSq == 7) squares[to-10] = 1;
+        if(to == enPassant && fromSq ==17) squares[to+10] = 7;
+        // If our game ended, reset result back to -1;
         if(toSq == 6) result = -1;
         if(toSq == 12) result = -1;
     }
@@ -244,8 +263,8 @@ public class Board {
         int i = index;
         switch(squares[index]){
             case 1: // White Pawn
-                if(squares[index-9] >= 7 && squares[index-9] <= 12) result.add(index-9);
-                if(squares[index-11] >= 7 && squares[index-11] <= 12) result.add(index-11);
+                if((squares[index-9] >= 7 && squares[index-9] <= 12) || index-9 == enPassant) result.add(index-9);
+                if((squares[index-11] >= 7 && squares[index-11] <= 12) || index-11 == enPassant) result.add(index-11);
                 if(squares[index-10] == 0) result.add(index-10);
                 if(squares[index-20] == 0 && squares[index-10] == 0) result.add(index-20);
                 break;
@@ -468,8 +487,8 @@ public class Board {
                 if((squares[index+11] >= 7 && squares[index+11] <13) || squares[index+11] == 0) result.add(index+11);
                 break;
             case 7: // Black Pawn
-                if(squares[index+9] >= 1 && squares[index+9] <= 6) result.add(index+9);
-                if(squares[index+11] >= 1 && squares[index+11] <= 6) result.add(index+11);
+                if((squares[index+9] >= 1 && squares[index+9] <= 6) || index+9 == enPassant) result.add(index+9);
+                if((squares[index+11] >= 1 && squares[index+11] <= 6) || index+11 == enPassant) result.add(index+11);
                 if(squares[index+10] == 0) result.add(index+10);
                 if(squares[index+20] == 0 && squares[index+10] == 0) result.add(index+20);
                 break;
