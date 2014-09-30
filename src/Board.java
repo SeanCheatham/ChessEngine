@@ -21,6 +21,8 @@ public class Board {
     public Stack<Integer> moves;
     // Counter to keep track of move
     public int moveCount;
+    // Counter to keep track of search nodes
+    public int nodeCount;
 
     public Board(){
         // 120 bit board is setup as follows:
@@ -56,6 +58,21 @@ public class Board {
         12=k
         13=* (out of bounds)
          */
+        /*squares = new int[]{
+                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+                13, 10, 8, 9, 11, 12, 9, 8, 10, 13,
+                13, 7, 7, 7, 7, 7, 7, 7, 7, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 1, 1, 1, 1, 1, 1, 1, 1, 13,
+                13, 4, 2, 3, 5, 6, 3, 2, 4, 13,
+                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+                13, 13, 13, 13, 13, 13, 13, 13, 13, 13
+        };*/
+
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -75,41 +92,35 @@ public class Board {
         castling = new int[] {1,1,1,1};
         enPassant = -1;
         moves = new Stack<Integer>();
-        moveCount = 0;
+        moveCount = 1;
+        nodeCount = 0;
     }
 
-    public void move(int from, int to){
-        doMove(from,to);
-        System.out.println("(" + squares[from] + ")"
-                + (from-20)%10 + "," + (from-20)/10
-                + ((squares[to] != 0)?" X ":" -> ")
-                + "(" + squares[to] + ")"
-                + (to-20)%10 + "," + (to-20)/10);
-        if(squares[to] == 6) result = 1;
-        if(squares[to] == 12) result = 0;
-        squares[to] = squares[from];
-        squares[from] = 0;
-        if(sideToMove == 0) sideToMove = 1;
-        else sideToMove = 0;
-    }
-
-    public void doMove(int from, int to){
-        moves.push(squares[from]);
-        moves.push(from);
-        moves.push(squares[to]);
-        moves.push(to);
+    public void move(Move m){
+        moves.push(m.fromPiece);
+        moves.push(m.from);
+        moves.push(m.toPiece);
+        moves.push(m.to);
         moves.push(castling[0]);
         moves.push(castling[1]);
         moves.push(castling[2]);
         moves.push(castling[3]);
         moves.push(enPassant);
-        moves.push(moveCount);
+        moves.push(moveCount+1);
         moveCount++;
+        if(m.toPiece == 6) result = 1;
+        if(m.toPiece == 12) result = 0;
+        squares[m.to] = m.fromPiece;
+        squares[m.from] = 0;
+        sideToMove = 1 - sideToMove;
+        // Automatically promote to queen
+        if(m.fromPiece == 1 && m.to >= 21 && m.to <= 28) squares[m.to] = 5;
+        if(m.fromPiece == 7 && m.to >= 91 && m.to <= 98) squares[m.to] = 11;
     }
 
     public void undoMove(){
         if(moveCount < 0) return;
-        this.moveCount = moves.pop();
+        this.moveCount = moves.pop()-1;
         this.enPassant = moves.pop();
         this.castling[3] = moves.pop();
         this.castling[2] = moves.pop();
@@ -121,7 +132,8 @@ public class Board {
         int fromSq = moves.pop();
         this.squares[from] = fromSq;
         this.squares[to] = toSq;
-        moveCount--;
+        if(toSq == 6) result = -1;
+        if(toSq == 12) result = -1;
     }
 
     public String toString(){
@@ -233,7 +245,7 @@ public class Board {
         switch(squares[index]){
             case 1: // White Pawn
                 if(squares[index-9] >= 7 && squares[index-9] <= 12) result.add(index-9);
-                if(squares[index-11] >= 7 && squares[index-11] <= 12) result.add(index-9);
+                if(squares[index-11] >= 7 && squares[index-11] <= 12) result.add(index-11);
                 if(squares[index-10] == 0) result.add(index-10);
                 if(squares[index-20] == 0 && squares[index-10] == 0) result.add(index-20);
                 break;
@@ -457,7 +469,7 @@ public class Board {
                 break;
             case 7: // Black Pawn
                 if(squares[index+9] >= 1 && squares[index+9] <= 6) result.add(index+9);
-                if(squares[index+11] >= 1 && squares[index+11] <= 6) result.add(index+9);
+                if(squares[index+11] >= 1 && squares[index+11] <= 6) result.add(index+11);
                 if(squares[index+10] == 0) result.add(index+10);
                 if(squares[index+20] == 0 && squares[index+10] == 0) result.add(index+20);
                 break;
@@ -683,31 +695,63 @@ public class Board {
         return result;
     }
 
-    public void search(int depth){
-        Random randomGenerator = new Random();
-        while(depth >= 0 && this.result == -1){
-            int r = randomGenerator.nextInt(80) + 20;
-            if(squares[r] == 0 || squares[r] == 13) continue;
-            ArrayList<Integer> attackable = calculateMoves(r);
-            if(attackable.size() < 1) continue;
-            if(sideToMove == 0){
-                //White to move
-                if(squares[r] >= 7 && squares[r] <= 12 && attackable.size() > 0){
-                    int r2 = randomGenerator.nextInt(attackable.size());
-                    move(r,attackable.get(r2));
-                }
+    public ArrayList<Move> possibleMoves(){
+        ArrayList<Move> moves = new ArrayList<Move>();
+        for(int i = 21; i<= 98; i++){
+            if(sideToMove == 0 && (squares[i]==0 || squares[i] >= 7)) continue;
+            if(sideToMove == 1 && (squares[i] <= 7 || squares[i] == 13)) continue;
+            for(Integer n : calculateMoves(i)){
+                Move m = new Move(i, squares[i], n, squares[n], moveCount+1);
+                moves.add(m);
             }
 
-            else if(sideToMove == 1){
-                //White to move
-                if(squares[r] >= 1 && squares[r] <= 6 && attackable.size() > 0){
-                    int r2 = randomGenerator.nextInt(attackable.size());
-                    move(r,attackable.get(r2));
+        }
+        return moves;
+    }
+
+    public Move search(int depth){
+        float max = 0;
+        Move finalMove = null;
+        for(Move m : possibleMoves()){
+            move(m);
+            float x = alphaBeta(-1000000,1000000,depth-1);
+            if(sideToMove == 0) {
+                if (x >= max) {
+                    max = x;
+                    finalMove = m;
                 }
             }
-            depth--;
+            else {
+                if (x < max) {
+                    max = x;
+                    finalMove = m;
+                }
+            }
+            undoMove();
         }
 
+        return finalMove;
+    }
+
+    public float alphaBeta(float alpha, float beta, int depth){
+        float score = 0;
+        nodeCount++;
+        if (depth == 0) return evaluate();
+        for(Move m : possibleMoves()){
+            move(m);
+            if(result > -1) {
+                float eval = evaluate();
+                undoMove();
+                return eval;
+            }
+            score = -1*alphaBeta(beta * -1, alpha * -1, depth - 1);
+            undoMove();
+            if(score >= beta)
+                return beta;
+            if (score > alpha)
+                alpha = score;
+        }
+        return alpha;
     }
 
 }

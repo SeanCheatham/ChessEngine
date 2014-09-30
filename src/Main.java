@@ -2,10 +2,10 @@
 public class Main {
     public static void main(String[] args) {
         Board b = new Board();
-        b.search(80);
+        Move m = b.search(8);
+        System.out.println("Recommended Move: "+m);
+        System.out.println("Nodes Searched: "+b.nodeCount);
         System.out.println(b.toString());
         System.out.println(b.evaluate());
-        while(b.moveCount >= 0) b.undoMove();
-        System.out.println(b.toString());
     }
 }
