@@ -57,7 +57,7 @@ public class Board {
         12=k
         13=* (out of bounds)
          */
-        /*squares = new int[]{
+        squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 10, 8, 9, 11, 12, 9, 8, 10, 13,
@@ -70,9 +70,9 @@ public class Board {
                 13, 4, 2, 3, 5, 6, 3, 2, 4, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
-        };*/
+        };
 
-        squares = new int[]{
+        /*squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 10, 0, 0, 0, 0, 0, 0, 10, 13,
@@ -85,7 +85,7 @@ public class Board {
                 13, 4, 0, 4, 0, 0, 0, 6, 0, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
-        };
+        };*/
         sideToMove = 0;
         result = -1;
         castling = new int[] {1,1,1,1};
@@ -153,6 +153,8 @@ public class Board {
         // If our game ended, reset result back to -1;
         if(toSq == 6) result = -1;
         if(toSq == 12) result = -1;
+        sideToMove = 1 - sideToMove;
+
     }
 
     public String toString(){
@@ -734,6 +736,8 @@ public class Board {
         for(Move m : possibleMoves()){
             move(m);
             float x = alphaBeta(-1000000,1000000,depth-1);
+            System.out.println(m+" : "+x);
+            undoMove();
             if(sideToMove == 0) {
                 if (x >= max) {
                     max = x;
@@ -741,14 +745,12 @@ public class Board {
                 }
             }
             else {
-                if (x < max) {
+                if (x <= max) {
                     max = x;
                     finalMove = m;
                 }
             }
-            undoMove();
         }
-
         return finalMove;
     }
 
