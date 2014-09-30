@@ -71,8 +71,8 @@ public class Board {
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
         };
-
-        /*squares = new int[]{
+        /*
+        squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 10, 0, 0, 0, 0, 0, 0, 10, 13,
@@ -85,7 +85,24 @@ public class Board {
                 13, 4, 0, 4, 0, 0, 0, 6, 0, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
-        };*/
+        };
+        */
+        /*
+        squares = new int[]{
+                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 6, 0, 0, 4, 13,
+                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+                13, 13, 13, 13, 13, 13, 13, 13, 13, 13
+        };
+        */
         sideToMove = 0;
         result = -1;
         castling = new int[] {1,1,1,1};
@@ -96,6 +113,10 @@ public class Board {
     }
 
     public void move(Move m){
+        if(m == null){
+            System.out.println("Illegal Move Attempted");
+            System.exit(0);
+        }
         // Set en passant square if applicable
         if(m.fromPiece == 1 && m.from-m.to == 20) enPassant = m.from-10;
         if(m.fromPiece == 7 && m.to-m.from == 20) enPassant = m.from+10;
@@ -128,6 +149,31 @@ public class Board {
         // Automatically promote to queen
         if(m.fromPiece == 1 && m.to >= 21 && m.to <= 28) squares[m.to] = 5;
         if(m.fromPiece == 7 && m.to >= 91 && m.to <= 98) squares[m.to] = 11;
+        // Castling
+        // White King Side
+        if(m.fromPiece == 6 && m.from == 95 && m.to == 97){
+            squares[98] = 0;
+            squares[96] = 4;
+            castling[0] = 0;
+        }
+        // White Queen Side
+        if(m.fromPiece == 6 && m.from == 95 && m.to == 93){
+            squares[91] = 0;
+            squares[94] = 4;
+            castling[1] = 0;
+        }
+        // Black King Side
+        if(m.fromPiece == 12 && m.from == 25 && m.to == 27){
+            squares[28] = 0;
+            squares[26] = 10;
+            castling[2] = 0;
+        }
+        // Black Queen Side
+        if(m.fromPiece == 12 && m.from == 25 && m.to == 23){
+            squares[21] = 0;
+            squares[24] = 10;
+            castling[3] = 0;
+        }
     }
 
     public void undoMove(){
@@ -154,6 +200,31 @@ public class Board {
         if(toSq == 6) result = -1;
         if(toSq == 12) result = -1;
         sideToMove = 1 - sideToMove;
+        // Castling
+        // White King Side
+        if(fromSq == 6 && from == 95 && to == 97){
+            squares[98] = 4;
+            squares[96] = 0;
+            castling[0] = 1;
+        }
+        // White Queen Side
+        if(fromSq == 6 && from == 95 && to == 93){
+            squares[91] = 4;
+            squares[94] = 0;
+            castling[1] = 1;
+        }
+        // Black King Side
+        if(fromSq == 12 && from == 25 && to == 27){
+            squares[28] = 10;
+            squares[26] = 0;
+            castling[2] = 1;
+        }
+        // Black Queen Side
+        if(fromSq == 12 && from == 25 && to == 23){
+            squares[21] = 10;
+            squares[24] = 0;
+            castling[3] = 1;
+        }
 
     }
 
@@ -487,6 +558,10 @@ public class Board {
                 if((squares[index-11] >= 7 && squares[index-11] <13) || squares[index-11] == 0) result.add(index-11);
                 if((squares[index+9] >= 7 && squares[index+9] <13) || squares[index+9] == 0) result.add(index+9);
                 if((squares[index+11] >= 7 && squares[index+11] <13) || squares[index+11] == 0) result.add(index+11);
+                // King side castle
+                if(castling[0] == 1 && squares[96] == 0 && squares[97] == 0 && squares[98] == 4 && squares[95] == 6) result.add(97);
+                // Queen side castle
+                if(castling[1] == 1 && squares[94] == 0 && squares[93] == 0 && squares[92] == 0 && squares[91] == 4 && squares[95] == 6) result.add(93);
                 break;
             case 7: // Black Pawn
                 if((squares[index+9] >= 1 && squares[index+9] <= 6) || index+9 == enPassant) result.add(index+9);
@@ -711,6 +786,10 @@ public class Board {
                 if((squares[index-11] >= 1 && squares[index-11] <= 6) || squares[index-11] == 0) result.add(index-11);
                 if((squares[index+9] >= 1 && squares[index+9] <= 6) || squares[index+9] == 0) result.add(index+9);
                 if((squares[index+11] >= 1 && squares[index+11] <= 6) || squares[index+11] == 0) result.add(index+11);
+                // King side castle
+                if(castling[2] == 1 && squares[26] == 0 && squares[27] == 0 && squares[28] == 10 && squares[25] == 12) result.add(27);
+                // Queen side castle
+                if(castling[3] == 1 && squares[24] == 0 && squares[23] == 0 && squares[22] == 0 && squares[21] == 10 && squares[25] == 12) result.add(23);
                 break;
         }
         return result;
@@ -735,7 +814,7 @@ public class Board {
         Move finalMove = null;
         for(Move m : possibleMoves()){
             move(m);
-            float x = alphaBeta(-1000000,1000000,depth-1);
+            float x = alphaBetaMax(-1000000,1000000,depth-1);
             System.out.println(m+" : "+x);
             undoMove();
             if(sideToMove == 0) {
@@ -753,8 +832,8 @@ public class Board {
         }
         return finalMove;
     }
-
-    public float alphaBeta(float alpha, float beta, int depth){
+    
+    public float alphaBetaMax(float alpha, float beta, int depth){
         float score = 0;
         nodeCount++;
         if (depth == 0) return evaluate();
@@ -765,14 +844,31 @@ public class Board {
                 undoMove();
                 return eval;
             }
-            score = -1*alphaBeta(beta * -1, alpha * -1, depth - 1);
+            score = alphaBetaMin(alpha, beta, depth-1);
             undoMove();
-            if(score >= beta)
-                return beta;
-            if (score > alpha)
-                alpha = score;
+            if(score>= beta) return beta;
+            if(score>alpha) alpha = score;
         }
         return alpha;
+    }
+    
+    public float alphaBetaMin(float alpha, float beta, int depth){
+        float score = 0;
+        nodeCount++;
+        if (depth == 0) return evaluate();
+        for(Move m : possibleMoves()){
+            move(m);
+            if(result > -1) {
+                float eval = evaluate();
+                undoMove();
+                return eval;
+            }
+            score = alphaBetaMax(alpha, beta, depth-1);
+            undoMove();
+            if(score <= alpha) return alpha;
+            if(score < beta) beta = score;
+        }
+        return beta;
     }
 
 }
