@@ -57,6 +57,7 @@ public class Board {
         12=k
         13=* (out of bounds)
          */
+        
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -71,6 +72,7 @@ public class Board {
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
         };
+
         /*
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -107,7 +109,7 @@ public class Board {
         result = -1;
         castling = new int[] {1,1,1,1};
         enPassant = -1;
-        moves = new Stack<>();
+        moves = new Stack<Integer>();
         moveCount = 1;
         nodeCount = 0;
     }
@@ -304,51 +306,52 @@ public class Board {
         // If there are no pawns on the board, the game is "open", and bishops are more useful (thus weighted at 1.25)
         double bishopWeight = (double) (1 + (16.0-(wPawns+bPawns))/64.0);
         //System.out.println(""+knightWeight+";"+bishopWeight);
-        for(int i=0; i<=squares.length-1; i++){
+        for(int i=21; i<=98; i++){
             switch(squares[i]){
-                case 1:
+                case 1: // White Pawns have a value of 1
                     val += 1;
                     break;
-                case 2:
+                case 2: // White knights have a value of 3 (times the weight of knights)
                     val += 3*knightWeight;
                     break;
-                case 3:
+                case 3: // White bishops have a value of 3 (times the weight of the bishops)
                     val += 3*bishopWeight;
                     break;
-                case 4:
+                case 4: // White rooks have a value of 5
                     val += 5;
                     break;
-                case 5:
+                case 5: // White queens have a value of 10
                     val += 10;
                     break;
-                case 6:
+                case 6: // White kings have a value of 1000
                     val += 1000;
                     break;
-                case 7:
+                case 7: // Black pawns have a value of -1
                     val -= 1;
                     break;
-                case 8:
+                case 8: // Black knights have a value of -3 (times the weight of the knights)
                     val -= 3*knightWeight;
                     break;
-                case 9:
+                case 9: // Black bishops have a value of -3 (times the weight of the bishops)
                     val -= 3*bishopWeight;
                     break;
-                case 10:
+                case 10: // Black rooks have a value of -5
                     val -= 5;
                     break;
-                case 11:
+                case 11: // Black queens have a value of -10
                     val -= 10;
                     break;
-                case 12:
+                case 12: // Black kings have a value of -1000
                     val -= 1000;
                     break;
-                default:
+                default: // If we somehow ended up looking at something else (such as an empty or illegal square(0 or 13 respectively)), break
                     break;
             }
         }
+        // return the score of the board
         return val;
     }
-
+    // Function that generates the possible moves that the piece aat a given square can make
     public ArrayList<Integer> calculateMoves(int index){
         ArrayList<Integer> result = new ArrayList<Integer>();
         int i = index;
@@ -812,69 +815,117 @@ public class Board {
         }
         return result;
     }
-
+    // Generate a list of possible moves that the current side to move can make
     public ArrayList<Move> possibleMoves(){
-        ArrayList<Move> availableMoves = new ArrayList<>();
+        // Initialize a new Array List to store our moves
+        ArrayList<Move> availableMoves = new ArrayList<Move>();
+        // Iterate through all legal squares on the board
         for(int i = 21; i<= 98; i++){
+            // If it is white's move, and if the square we are looking at is either empty or belongs to black, skip this square
             if(sideToMove == 0 && (squares[i]==0 || squares[i] >= 7)) continue;
-            if(sideToMove == 1 && (squares[i] <= 7 || squares[i] == 13)) continue;
+            // If it is black's move, and if the square we are looking at is either empty or belongs to white, skip this square
+            if(sideToMove == 1 && (squares[i] <= 6 || squares[i] == 13)) continue;
+            // The square belongs to the current side to move, so we can gather all of the moves that piece can make
             for(Integer n : calculateMoves(i)){
+                // Create a move object for the potential move and add it to the list of possible moves
                 Move m = new Move(i, squares[i], n, squares[n], moveCount+1);
                 availableMoves.add(m);
             }
-
         }
+        // Return the list of legal moves
         return availableMoves;
     }
-
+    // Search initializer function.  Takes in a depth limit, and returns the "best" move
     public Move search(int depth){
-        double max = 0;
+        // Initialize a temp variable to store our current "max" value
+        double max;
+        // If it is white's move, then set the max to a ridiculously low number.  This way, it can be overwritten by pretty much any move
+        if(sideToMove == 0) max = -10000;
+        // Otherwise, set the max to a high number.
+        else max = 10000;
+        // Initialize a variable to store the "best" move
         Move finalMove = null;
+        // Iterate through all possible moves
         for(Move m : possibleMoves()){
+            // If (for some reason), we end up with a blank move, we can assume that there are no possible moves
+            if(m == null){
+                // Thus we exit
+                System.out.println("No legal moves");
+                System.exit(0);
+            }
+            // Make the move for the current iteration
             move(m);
+            // Call the Alpha/Beta function (start with max), and store it in a temporary variable
             double x = alphaBetaMax(-1000000,1000000,depth-1);
+            // Output the move we are looking at, as well as whatever Alpha/Beta says for its value
             System.out.println(m+" : "+x);
+            // Undo the move so that we're back to the previous state
             undoMove();
+            // If it is white's move
             if(sideToMove == 0) {
+                // And if the value returned by Alpha/Beta is GREATER than (or equal to) our current "best move"
                 if (x >= max) {
+                    // Set the best move to our new move
                     max = x;
                     finalMove = m;
                 }
             }
+            // If it is black's move
             else {
+                // And if the value returned by Alpha/Beta is LESS than (or equal to) our current "best move"
                 if (x <= max) {
+                    // Set the best move to our new move
                     max = x;
                     finalMove = m;
                 }
             }
         }
+        // Return the "best" move
         return finalMove;
     }
-    
+    // Relatively generic implementation of Alpha Beta (Max side)
+    // Takes in an alpha value (initially an infinitely negative value), a beta value (initially an infinitely positive value), and a depth to search to
     public double alphaBetaMax(double alpha, double beta, int depth){
-        double score = 0;
+        // Initialize the score to alpha
+        double score = alpha;
+        // Increment the number of nodes searched
         nodeCount++;
+        // Base case: If we're at the bottom of the tree, evaluate the board and return
         if (depth == 0) return evaluate();
+        // Iterate through all possible moves
         for(Move m : possibleMoves()){
+            // If we somehow end up with a null move, just return the evaluation of the board
+            if(m == null) return evaluate();
+            // Do the move
             move(m);
+            // If that move we just did ends the game
             if(result > -1) {
+                // Evaluate the board
                 double eval = evaluate();
+                // Undo the move to return to our previous state
                 undoMove();
+                // Return the board evaluation
                 return eval;
             }
+            // Run Alpha/Beta (min)
             score = alphaBetaMin(alpha, beta, depth-1);
+            // Undo the move to return to our previous state
             undoMove();
+            // If our score somehow ends up higher than beta, then we cut the line (pruning)
             if(score>= beta) return beta;
+            // If the score is greater than alpha, set alpha to the score
             if(score>alpha) alpha = score;
         }
+        // Return alpha
         return alpha;
     }
-    
+    // Same idea as with Alpha/Beta Max, except we switch the side for which we are evaluating
     public double alphaBetaMin(double alpha, double beta, int depth){
-        double score = 0;
+        double score = beta;
         nodeCount++;
         if (depth == 0) return evaluate();
         for(Move m : possibleMoves()){
+            if(m == null) return beta;
             move(m);
             if(result > -1) {
                 double eval = evaluate();
