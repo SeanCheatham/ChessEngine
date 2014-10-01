@@ -57,7 +57,6 @@ public class Board {
         12=k
         13=* (out of bounds)
          */
-        
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -71,24 +70,7 @@ public class Board {
                 13, 4, 2, 3, 5, 6, 3, 2, 4, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
-        };
-
-        /*
-        squares = new int[]{
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 10, 0, 0, 0, 0, 0, 0, 10, 13,
-                13, 7, 0, 7, 0, 12, 7, 0, 7, 13,
-                13, 0, 8, 0, 7, 0, 0, 7, 0, 13,
-                13, 0, 0, 0, 9, 0, 0, 0, 0, 13,
-                13, 0, 0, 2, 0, 0, 1, 0, 0, 13,
-                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
-                13, 1, 1, 0, 0, 1, 0, 3, 1, 13,
-                13, 4, 0, 4, 0, 0, 0, 6, 0, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13
-        };
-        */
+        };   
         /*
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -303,6 +285,8 @@ public class Board {
             if(squares[i]== 1) wPawns++;
             if(squares[i]== 7) bPawns++;
         }
+        // Doubled pawns tend to be bad, so we subtract a quarter point for each doubled pawn (meaning that a set of doubled pawns adds to a half point off)
+        val += getDoubledPawns(1).size()*0.25 - getDoubledPawns(0).size()*0.25;
         // Weight of knight pieces
         // This formula guarantees a weight between 0.75 and 1
         // If there are 16 pawns on the board, the game is "closed", and knights are more useful (thus weighted at 1.0)
@@ -360,6 +344,8 @@ public class Board {
     // Function that generates the possible moves that the piece aat a given square can make
     public ArrayList<Integer> calculateMoves(int index){
         ArrayList<Integer> result = new ArrayList<Integer>();
+        
+        // Setup a variable that we can play with throughout
         int i = index;
         switch(squares[index]){
             case 1: // White Pawn
@@ -981,4 +967,30 @@ public class Board {
         return s;
     }
 
+    public ArrayList<Integer> getDoubledPawns(int s){
+        ArrayList<Integer> vals = new ArrayList<Integer>();
+        // Use 31 to 88 because pawns can't exist on the back ranks for either side
+        for(int i = 31; i <= 88; i++){
+            // Get black doubled pawns
+            if(squares[i] == 7 && s == 1){
+                for(int j = i; j<=98; j+= 10){
+                    if(squares[j] == 7){
+                        vals.add(i);
+                        vals.add(j);
+                    }
+                }
+            }
+            // Get white doubled pawns
+            else if(squares[i] == 1 && s == 0){
+                for(int j = i; j>=21; j-= 10){
+                    if(squares[j] == 1){
+                        vals.add(i);
+                        vals.add(j);
+                    }
+                }
+            }
+        }
+        return vals;
+    }
+    
 }
