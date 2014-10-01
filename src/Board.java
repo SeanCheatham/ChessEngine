@@ -107,7 +107,7 @@ public class Board {
         result = -1;
         castling = new int[] {1,1,1,1};
         enPassant = -1;
-        moves = new Stack<Integer>();
+        moves = new Stack<>();
         moveCount = 1;
         nodeCount = 0;
     }
@@ -228,6 +228,7 @@ public class Board {
 
     }
 
+    @Override
     public String toString(){
         String s = new String();
         for(int i = 20; i <= 90; i += 10){
@@ -284,51 +285,68 @@ public class Board {
         return s;
     }
 
-    public float evaluate(){
-        int result = 0;
+    public double evaluate(){
+        double val = 0.0;
+        // Number of pawns for each team
+        // If there are fewer than 8 pawns on the board, the game is considered "open".  Else, game is considered "closed".
+        int wPawns = 0;
+        int bPawns = 0;
+        for(int i=0; i<=squares.length-1; i++){
+            if(squares[i]== 1) wPawns++;
+            if(squares[i]== 7) bPawns++;
+        }
+        // Weight of knight pieces
+        // This formula guarantees a weight between 0.75 and 1
+        // If there are 16 pawns on the board, the game is "closed", and knights are more useful (thus weighted at 1.0)
+        double knightWeight = (double) (1 - (16.0-(wPawns+bPawns))/64.0);
+        // Weight of bishop pieces
+        // This formula guarantees a weight between 1 and 1.25
+        // If there are no pawns on the board, the game is "open", and bishops are more useful (thus weighted at 1.25)
+        double bishopWeight = (double) (1 + (16.0-(wPawns+bPawns))/64.0);
+        //System.out.println(""+knightWeight+";"+bishopWeight);
         for(int i=0; i<=squares.length-1; i++){
             switch(squares[i]){
                 case 1:
-                    result += 1;
+                    val += 1;
                     break;
                 case 2:
-                    result += 3;
+                    val += 3*knightWeight;
                     break;
                 case 3:
-                    result += 3;
+                    val += 3*bishopWeight;
                     break;
                 case 4:
-                    result += 5;
+                    val += 5;
                     break;
                 case 5:
-                    result += 10;
+                    val += 10;
                     break;
                 case 6:
-                    result += 1000;
+                    val += 1000;
                     break;
                 case 7:
-                    result -= 1;
+                    val -= 1;
                     break;
                 case 8:
-                    result -= 3;
+                    val -= 3*knightWeight;
                     break;
                 case 9:
-                    result -= 3;
+                    val -= 3*bishopWeight;
                     break;
                 case 10:
-                    result -= 5;
+                    val -= 5;
                     break;
                 case 11:
-                    result -= 10;
+                    val -= 10;
                     break;
                 case 12:
-                    result -= 1000;
+                    val -= 1000;
                     break;
                 default:
                     break;
             }
         }
-        return result;
+        return val;
     }
 
     public ArrayList<Integer> calculateMoves(int index){
@@ -796,25 +814,25 @@ public class Board {
     }
 
     public ArrayList<Move> possibleMoves(){
-        ArrayList<Move> moves = new ArrayList<Move>();
+        ArrayList<Move> availableMoves = new ArrayList<>();
         for(int i = 21; i<= 98; i++){
             if(sideToMove == 0 && (squares[i]==0 || squares[i] >= 7)) continue;
             if(sideToMove == 1 && (squares[i] <= 7 || squares[i] == 13)) continue;
             for(Integer n : calculateMoves(i)){
                 Move m = new Move(i, squares[i], n, squares[n], moveCount+1);
-                moves.add(m);
+                availableMoves.add(m);
             }
 
         }
-        return moves;
+        return availableMoves;
     }
 
     public Move search(int depth){
-        float max = 0;
+        double max = 0;
         Move finalMove = null;
         for(Move m : possibleMoves()){
             move(m);
-            float x = alphaBetaMax(-1000000,1000000,depth-1);
+            double x = alphaBetaMax(-1000000,1000000,depth-1);
             System.out.println(m+" : "+x);
             undoMove();
             if(sideToMove == 0) {
@@ -833,14 +851,14 @@ public class Board {
         return finalMove;
     }
     
-    public float alphaBetaMax(float alpha, float beta, int depth){
-        float score = 0;
+    public double alphaBetaMax(double alpha, double beta, int depth){
+        double score = 0;
         nodeCount++;
         if (depth == 0) return evaluate();
         for(Move m : possibleMoves()){
             move(m);
             if(result > -1) {
-                float eval = evaluate();
+                double eval = evaluate();
                 undoMove();
                 return eval;
             }
@@ -852,14 +870,14 @@ public class Board {
         return alpha;
     }
     
-    public float alphaBetaMin(float alpha, float beta, int depth){
-        float score = 0;
+    public double alphaBetaMin(double alpha, double beta, int depth){
+        double score = 0;
         nodeCount++;
         if (depth == 0) return evaluate();
         for(Move m : possibleMoves()){
             move(m);
             if(result > -1) {
-                float eval = evaluate();
+                double eval = evaluate();
                 undoMove();
                 return eval;
             }
