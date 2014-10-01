@@ -233,57 +233,63 @@ public class Board {
     @Override
     public String toString(){
         String s = new String();
+        s += "   ________________\n";
         for(int i = 20; i <= 90; i += 10){
+            if(i%10 == 0){
+                s+= ""+(100-i)/10+" |";
+            }
             for(int j = 1; j <= 8; j++){
                 switch(this.squares[i+j]){
                     case 0:
-                        s += "-";
+                        s += "-|";
                         break;
                     case 1:
-                        s += "P";
+                        s += "P|";
                         break;
                     case 2:
-                        s += "N";
+                        s += "N|";
                         break;
                     case 3:
-                        s += "B";
+                        s += "B|";
                         break;
                     case 4:
-                        s += "R";
+                        s += "R|";
                         break;
                     case 5:
-                        s += "Q";
+                        s += "Q|";
                         break;
                     case 6:
-                        s += "K";
+                        s += "K|";
                         break;
                     case 7:
-                        s += "p";
+                        s += "p|";
                         break;
                     case 8:
-                        s += "n";
+                        s += "n|";
                         break;
                     case 9:
-                        s += "b";
+                        s += "b|";
                         break;
                     case 10:
-                        s += "r";
+                        s += "r|";
                         break;
                     case 11:
-                        s += "q";
+                        s += "q|";
                         break;
                     case 12:
-                        s += "k";
+                        s += "k|";
                         break;
                     case 13:
-                        s += "*";
+                        s += "*|";
                         break;
                     default:
                         break;
                 }
             }
             s += "\n";
+            s += "   ________________\n";
         }
+        s += "   A B C D E F G H";
         return s;
     }
 
@@ -938,6 +944,41 @@ public class Board {
             if(score < beta) beta = score;
         }
         return beta;
+    }
+    
+    public String indexToCoordinates(int index){
+        int i = index - 20;
+        String s = new String();
+        switch(i%10){
+            case 1:
+                s+="A";
+                break;
+            case 2:
+                s+="b";
+                break;
+            case 3:
+                s+="C";
+                break;
+            case 4:
+                s+="D";
+                break;
+            case 5:
+                s+="E";
+                break;
+            case 6:
+                s+="F";
+                break;
+            case 7:
+                s+="G";
+                break;
+            case 8:
+                s+="H";
+                break;
+            default:
+                break;
+        }
+        s+= 9-(i/10 + 1);
+        return s;
     }
 
 }
