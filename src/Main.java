@@ -1,22 +1,28 @@
 
 public class Main {
-    final public static int MAXDEPTH = 8;
+    // Config Declarations, because this looks like a good spot for them
+    final public static int MAXDEPTH = 10;
+
+
     public static void main(String[] args) {
+        // Initialize a new board
         Board b = new Board();
-        /*Move s = new Move(85,1,65,0,1);
-        b.move(s);
-        Move x = new Move(27,8,46,0,2);
-        b.move(x);
-        Move y = new Move(97,2,76,0,3);
-        b.move(y);*/
+        // For debug purposes, I like to know how long the engine takes.  Record the time now, run the engine, record again
         long t1 = System.currentTimeMillis();
+        // START YOUR ENGINES!!! Call the search(depth) function
         Move m = b.search(MAXDEPTH);
+        // Re-read the time
         long t2 = System.currentTimeMillis();
-        System.out.println("Recommended Move: "+m);
+        // So, Mr. Engine, what move did you come up with?
+        System.out.println("Recommended Move: "+m.fromPiece+b.indexToCoordinates(m.to));
+        // And how long did you take, Mr. Engine?
         long time = t2-t1 + 1000;
-        b.move(m);
+        // Make the move that the engine came up with
+        m.move();
+        // Print out some stuff.
         System.out.println("Nodes Searched: "+b.nodeCount+" in "+(time)/1000+" seconds");
         System.out.println(""+b.nodeCount/((time)/1000)+" nodes/sec");
         System.out.println(b.toString());
+        System.out.println(b.htable.size());
     }
 }

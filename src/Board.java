@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.Stack;
 
 public class Board {
@@ -17,11 +19,13 @@ public class Board {
     //  Array of black pieces
     public static final int[] BLACKPIECES= {7,8,9,10,11,12};
     // Stack to keep track of moves
-    public Stack<Integer> moves;
+    public Stack<Move> moves;
     // Counter to keep track of move
     public int moveCount;
     // Counter to keep track of search nodes
     public int nodeCount;
+    // Hashtable to keep track of previous moves and their evaluations
+    Hashtable<Integer,Double> htable;
 
     public Board(){
         // 120 bit board is setup as follows:
@@ -57,6 +61,23 @@ public class Board {
         12=k
         13=* (out of bounds)
          */
+        /*
+        squares = new int[]{
+                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+                13, 12, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 7, 0, 0, 0, 0, 0, 0, 13,
+                13, 7, 0, 7, 6, 0, 0, 0, 0, 13,
+                13, 1, 0, 3, 0, 0, 0, 0, 0, 13,
+                13, 0, 1, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
+                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+                13, 13, 13, 13, 13, 13, 13, 13, 13, 13
+        };
+        */
+
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -70,7 +91,7 @@ public class Board {
                 13, 4, 2, 3, 5, 6, 3, 2, 4, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
-        };   
+        };
         /*
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -91,125 +112,22 @@ public class Board {
         result = -1;
         castling = new int[] {1,1,1,1};
         enPassant = -1;
-        moves = new Stack<Integer>();
+        moves = new Stack<Move>();
         moveCount = 1;
         nodeCount = 0;
+        htable = new Hashtable<Integer,Double>();
     }
 
-    public void move(Move m){
-        if(m == null){
-            System.out.println("Illegal Move Attempted");
-            System.exit(0);
-        }
-        // Set en passant square if applicable
-        if(m.fromPiece == 1 && m.from-m.to == 20) enPassant = m.from-10;
-        if(m.fromPiece == 7 && m.to-m.from == 20) enPassant = m.from+10;
-        // Push the move information onto a stack
-        moves.push(m.fromPiece);
-        moves.push(m.from);
-        moves.push(m.toPiece);
-        moves.push(m.to);
-        moves.push(castling[0]);
-        moves.push(castling[1]);
-        moves.push(castling[2]);
-        moves.push(castling[3]);
-        moves.push(enPassant);
-        moves.push(moveCount+1);
-        // Increment the move counter
-        moveCount++;
-        // King was captured, so set the result
-        if(m.toPiece == 6) result = 1;
-        if(m.toPiece == 12) result = 0;
-        // Do en passant if applicable
-        if(m.fromPiece == 1 && m.to == enPassant) squares[m.to-10] = 0;
-        if(m.fromPiece == 7 && m.to == enPassant) squares[m.to+10] = 0;
-        // Reset en passant square
-        enPassant = -1;
-        // Move the pieces
-        squares[m.to] = m.fromPiece;
-        squares[m.from] = 0;
-        // Switch the side to move
-        sideToMove = 1 - sideToMove;
-        // Automatically promote to queen
-        if(m.fromPiece == 1 && m.to >= 21 && m.to <= 28) squares[m.to] = 5;
-        if(m.fromPiece == 7 && m.to >= 91 && m.to <= 98) squares[m.to] = 11;
-        // Castling
-        // White King Side
-        if(m.fromPiece == 6 && m.from == 95 && m.to == 97){
-            squares[98] = 0;
-            squares[96] = 4;
-            castling[0] = 0;
-        }
-        // White Queen Side
-        if(m.fromPiece == 6 && m.from == 95 && m.to == 93){
-            squares[91] = 0;
-            squares[94] = 4;
-            castling[1] = 0;
-        }
-        // Black King Side
-        if(m.fromPiece == 12 && m.from == 25 && m.to == 27){
-            squares[28] = 0;
-            squares[26] = 10;
-            castling[2] = 0;
-        }
-        // Black Queen Side
-        if(m.fromPiece == 12 && m.from == 25 && m.to == 23){
-            squares[21] = 0;
-            squares[24] = 10;
-            castling[3] = 0;
-        }
-    }
-
-    public void undoMove(){
-        // If for some reason our move count is negative, just return
-        if(moveCount < 0) return;
-        // Pop the last move off the stack
-        this.moveCount = moves.pop()-1;
-        this.enPassant = moves.pop();
-        this.castling[3] = moves.pop();
-        this.castling[2] = moves.pop();
-        this.castling[1] = moves.pop();
-        this.castling[0] = moves.pop();
-        int to = moves.pop();
-        int toSq = moves.pop();
-        int from = moves.pop();
-        int fromSq = moves.pop();
-        // Move the pieces back to their original locations
-        this.squares[from] = fromSq;
-        this.squares[to] = toSq;
-        // If previous move was en passant, reset the captured piece
-        if(to == enPassant && fromSq == 7) squares[to-10] = 1;
-        if(to == enPassant && fromSq ==17) squares[to+10] = 7;
-        // If our game ended, reset result back to -1;
-        if(toSq == 6) result = -1;
-        if(toSq == 12) result = -1;
-        sideToMove = 1 - sideToMove;
-        // Castling
-        // White King Side
-        if(fromSq == 6 && from == 95 && to == 97){
-            squares[98] = 4;
-            squares[96] = 0;
-            castling[0] = 1;
-        }
-        // White Queen Side
-        if(fromSq == 6 && from == 95 && to == 93){
-            squares[91] = 4;
-            squares[94] = 0;
-            castling[1] = 1;
-        }
-        // Black King Side
-        if(fromSq == 12 && from == 25 && to == 27){
-            squares[28] = 10;
-            squares[26] = 0;
-            castling[2] = 1;
-        }
-        // Black Queen Side
-        if(fromSq == 12 && from == 25 && to == 23){
-            squares[21] = 10;
-            squares[24] = 0;
-            castling[3] = 1;
-        }
-
+    //Copy constructor
+    public Board(Board b){
+        this.squares = b.squares;
+        this.sideToMove = b.sideToMove;
+        this.result = b.result;
+        this.castling = b.castling;
+        this.enPassant = b.enPassant;
+        this.moveCount = b.moveCount;
+        this.nodeCount = b.nodeCount;
+        this.htable = b.htable;
     }
 
     @Override
@@ -344,7 +262,7 @@ public class Board {
     // Function that generates the possible moves that the piece aat a given square can make
     public ArrayList<Integer> calculateMoves(int index){
         ArrayList<Integer> result = new ArrayList<Integer>();
-        
+
         // Setup a variable that we can play with throughout
         int i = index;
         switch(squares[index]){
@@ -820,7 +738,7 @@ public class Board {
             // The square belongs to the current side to move, so we can gather all of the moves that piece can make
             for(Integer n : calculateMoves(i)){
                 // Create a move object for the potential move and add it to the list of possible moves
-                Move m = new Move(i, squares[i], n, squares[n], moveCount+1);
+                Move m = new Move(i, squares[i], n, squares[n], moveCount+1, castling, enPassant, this);
                 availableMoves.add(m);
             }
         }
@@ -833,7 +751,7 @@ public class Board {
         double max;
         // If it is white's move, then set the max to a ridiculously low number.  This way, it can be overwritten by pretty much any move
         if(sideToMove == 0) max = -10000;
-        // Otherwise, set the max to a high number.
+            // Otherwise, set the max to a high number.
         else max = 10000;
         // Initialize a variable to store the "best" move
         Move finalMove = null;
@@ -846,13 +764,13 @@ public class Board {
                 System.exit(0);
             }
             // Make the move for the current iteration
-            move(m);
+            m.move();
             // Call the Alpha/Beta function (start with max), and store it in a temporary variable
             double x = alphaBetaMax(-1000000,1000000,depth-1);
             // Output the move we are looking at, as well as whatever Alpha/Beta says for its value
             System.out.println(m+" : "+x);
             // Undo the move so that we're back to the previous state
-            undoMove();
+            m.undoMove();
             // If it is white's move
             if(sideToMove == 0) {
                 // And if the value returned by Alpha/Beta is GREATER than (or equal to) our current "best move"
@@ -883,26 +801,37 @@ public class Board {
         // Increment the number of nodes searched
         nodeCount++;
         // Base case: If we're at the bottom of the tree, evaluate the board and return
-        if (depth == 0) return evaluate();
+        if (depth == 0){
+            double d = this.evaluate();
+            htable.put(this.hashCode(),d);
+            return d;
+        }
         // Iterate through all possible moves
         for(Move m : possibleMoves()){
             // If we somehow end up with a null move, just return the evaluation of the board
-            if(m == null) return evaluate();
+            ////if(m == null) return evaluate();
             // Do the move
-            move(m);
+            m.move();
+            /*System.out.println(hashCode());
+            System.out.println(this);*/
+            if(htable.containsKey(this.hashCode())){
+                double d = htable.get(this.hashCode());
+                m.undoMove();
+                return d;
+            }
             // If that move we just did ends the game
             if(result > -1) {
                 // Evaluate the board
                 double eval = evaluate();
                 // Undo the move to return to our previous state
-                undoMove();
+                m.undoMove();
                 // Return the board evaluation
                 return eval;
             }
             // Run Alpha/Beta (min)
             score = alphaBetaMin(alpha, beta, depth-1);
             // Undo the move to return to our previous state
-            undoMove();
+            m.undoMove();
             // If our score somehow ends up higher than beta, then we cut the line (pruning)
             if(score>= beta) return beta;
             // If the score is greater than alpha, set alpha to the score
@@ -915,23 +844,32 @@ public class Board {
     public double alphaBetaMin(double alpha, double beta, int depth){
         double score = beta;
         nodeCount++;
-        if (depth == 0) return evaluate();
+        if (depth == 0){
+            double d = this.evaluate();
+            htable.put(this.hashCode(),d);
+            return d;
+        }
         for(Move m : possibleMoves()){
             if(m == null) return beta;
-            move(m);
+            m.move();
+            if(htable.containsKey(this.hashCode())){
+                double d = htable.get(this.hashCode());
+                m.undoMove();
+                return d;
+            }
             if(result > -1) {
                 double eval = evaluate();
-                undoMove();
+                m.undoMove();
                 return eval;
             }
             score = alphaBetaMax(alpha, beta, depth-1);
-            undoMove();
+            m.undoMove();
             if(score <= alpha) return alpha;
             if(score < beta) beta = score;
         }
         return beta;
     }
-    
+
     public String indexToCoordinates(int index){
         int i = index - 20;
         String s = new String();
@@ -992,5 +930,32 @@ public class Board {
         }
         return vals;
     }
-    
+
+    @Override
+    public int hashCode(){
+        final int prime = 31;
+        int r = 1;
+        r = prime * r + Arrays.hashCode(this.squares);
+        r = prime * r + this.squares.hashCode();
+        r = prime * r + this.sideToMove;
+        r = prime * r + this.result;
+        r = prime * r + this.enPassant;
+        r = prime * r + Arrays.hashCode(this.castling);
+        return r;
+
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || this.getClass() != obj.getClass()) {
+            return false;
+        }
+        Board other = (Board) obj;
+        return this.squares == other.squares
+                && this.sideToMove == other.sideToMove
+                && this.result == other.result
+                && this.enPassant == other.enPassant
+                && this.castling == other.castling;
+    }
 }
