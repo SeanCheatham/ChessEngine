@@ -1,6 +1,4 @@
-/**
- * Created by Sean on 9/29/2014.
- */
+// Copyright (C) 2014; Sean Cheatham
 public class Move {
     public int from;
     public int fromPiece;
@@ -25,15 +23,11 @@ public class Move {
 
     // Perform a move
     public void move(){
-        if(this == null){
-            System.out.println("Illegal Move Attempted");
-            System.exit(0);
-        }
         // Set en passant square if applicable
         if(fromPiece == 1 && from-to == 20) board.enPassant = from-10;
         if(fromPiece == 7 && to-from == 20) board.enPassant = from+10;
         // Increment the move counter
-        board.moveCount++;
+        board.moveCount = moveNumber;
         // King was captured, so set the result
         if(toPiece == 6) board.result = 1;
         if(toPiece == 12) board.result = 0;
@@ -91,7 +85,10 @@ public class Move {
         // If our game ended, reset result back to -1;
         if(toPiece == 6) board.result = -1;
         if(toPiece == 12) board.result = -1;
+        // Switch side to move
         board.sideToMove = 1 - board.sideToMove;
+        // Decrement move counter
+        board.moveCount = moveNumber;
         // Castling
         // White King Side
         if(fromPiece == 6 && from == 95 && to == 97){
@@ -121,14 +118,10 @@ public class Move {
     }
 
     public String toString() {
-        String s = new String();
-        s = "(" + fromPiece + ")"
-                //+ (from - 20) % 10 + "," + (from - 20) / 10
+        return "(" + fromPiece + ")"
                 +from
                 + ((toPiece != 0) ? " X " : " -> ")
                 + "(" + toPiece + ")"
                 +to;
-        //+ (to - 20) % 10 + "," + (to - 20) / 10;
-        return s;
     }
 }

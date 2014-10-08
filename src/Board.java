@@ -1,7 +1,7 @@
+// Copyright (C) 2014; Sean Cheatham
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
-import java.util.Stack;
 
 public class Board {
     // Array of integers to represent piece types
@@ -15,15 +15,8 @@ public class Board {
     // Keep track of en passant square (index)
     public int enPassant;
     // Array of white pieces
-    public static final int[] WHITEPIECES= {1,2,3,4,5,6};
-    //  Array of black pieces
-    public static final int[] BLACKPIECES= {7,8,9,10,11,12};
-    // Stack to keep track of moves
-    public Stack<Move> moves;
     // Counter to keep track of move
     public int moveCount;
-    // Counter to keep track of search nodes
-    public int nodeCount;
     // Hashtable to keep track of previous moves and their evaluations
     Hashtable<Integer,Double> htable;
 
@@ -61,7 +54,7 @@ public class Board {
         12=k
         13=* (out of bounds)
          */
-        /*
+
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -76,8 +69,8 @@ public class Board {
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
         };
-        */
 
+/*
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -91,7 +84,7 @@ public class Board {
                 13, 4, 2, 3, 5, 6, 3, 2, 4, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
-        };
+        };*/
         /*
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -112,9 +105,7 @@ public class Board {
         result = -1;
         castling = new int[] {1,1,1,1};
         enPassant = -1;
-        moves = new Stack<Move>();
         moveCount = 1;
-        nodeCount = 0;
         htable = new Hashtable<Integer,Double>();
     }
 
@@ -126,13 +117,12 @@ public class Board {
         this.castling = b.castling;
         this.enPassant = b.enPassant;
         this.moveCount = b.moveCount;
-        this.nodeCount = b.nodeCount;
         this.htable = b.htable;
     }
 
     @Override
     public String toString(){
-        String s = new String();
+        String s = "";
         s += "   ________________\n";
         for(int i = 20; i <= 90; i += 10){
             if(i%10 == 0){
@@ -199,7 +189,7 @@ public class Board {
         // If there are fewer than 8 pawns on the board, the game is considered "open".  Else, game is considered "closed".
         int wPawns = 0;
         int bPawns = 0;
-        for(int i=0; i<=squares.length-1; i++){
+        for(int i=21; i<=98; i++){
             if(squares[i]== 1) wPawns++;
             if(squares[i]== 7) bPawns++;
         }
@@ -208,11 +198,11 @@ public class Board {
         // Weight of knight pieces
         // This formula guarantees a weight between 0.75 and 1
         // If there are 16 pawns on the board, the game is "closed", and knights are more useful (thus weighted at 1.0)
-        double knightWeight = (double) (1 - (16.0-(wPawns+bPawns))/64.0);
+        double knightWeight = (1 - (16.0-(wPawns+bPawns))/64.0);
         // Weight of bishop pieces
         // This formula guarantees a weight between 1 and 1.25
         // If there are no pawns on the board, the game is "open", and bishops are more useful (thus weighted at 1.25)
-        double bishopWeight = (double) (1 + (16.0-(wPawns+bPawns))/64.0);
+        double bishopWeight = (1 + (16.0-(wPawns+bPawns))/64.0);
         //System.out.println(""+knightWeight+";"+bishopWeight);
         for(int i=21; i<=98; i++){
             switch(squares[i]){
@@ -799,7 +789,7 @@ public class Board {
         // Initialize the score to alpha
         double score = alpha;
         // Increment the number of nodes searched
-        nodeCount++;
+        Main.NODECOUNT++;
         // Base case: If we're at the bottom of the tree, evaluate the board and return
         if (depth == 0){
             double d = this.evaluate();
@@ -808,15 +798,13 @@ public class Board {
         }
         // Iterate through all possible moves
         for(Move m : possibleMoves()){
-            // If we somehow end up with a null move, just return the evaluation of the board
-            ////if(m == null) return evaluate();
             // Do the move
             m.move();
-            /*System.out.println(hashCode());
-            System.out.println(this);*/
+            // Check if the htable contains this board
             if(htable.containsKey(this.hashCode())){
                 double d = htable.get(this.hashCode());
                 m.undoMove();
+                Main.COLLISIONCOUNT++;
                 return d;
             }
             // If that move we just did ends the game
@@ -843,7 +831,7 @@ public class Board {
     // Same idea as with Alpha/Beta Max, except we switch the side for which we are evaluating
     public double alphaBetaMin(double alpha, double beta, int depth){
         double score = beta;
-        nodeCount++;
+        Main.NODECOUNT++;
         if (depth == 0){
             double d = this.evaluate();
             htable.put(this.hashCode(),d);
@@ -855,6 +843,7 @@ public class Board {
             if(htable.containsKey(this.hashCode())){
                 double d = htable.get(this.hashCode());
                 m.undoMove();
+                Main.COLLISIONCOUNT++;
                 return d;
             }
             if(result > -1) {
@@ -872,7 +861,7 @@ public class Board {
 
     public String indexToCoordinates(int index){
         int i = index - 20;
-        String s = new String();
+        String s = "";
         switch(i%10){
             case 1:
                 s+="A";
@@ -936,7 +925,6 @@ public class Board {
         final int prime = 31;
         int r = 1;
         r = prime * r + Arrays.hashCode(this.squares);
-        r = prime * r + this.squares.hashCode();
         r = prime * r + this.sideToMove;
         r = prime * r + this.result;
         r = prime * r + this.enPassant;
