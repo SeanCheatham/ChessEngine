@@ -117,6 +117,7 @@ public class Move {
 
     }
 
+    @Override
     public String toString() {
         return "(" + board.intToPiece(fromPiece) + ")"
                 +board.indexToCoordinates(from)

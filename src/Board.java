@@ -120,69 +120,136 @@ public class Board {
         this.hmap = b.hmap;
     }
 
-    @Override
-    public String toString(){
-        String s = "";
-        s += "   ________________\n";
-        for(int i = 20; i <= 90; i += 10){
-            if(i%10 == 0){
-                s+= ""+(100-i)/10+" |";
+    
+    // Search Functions
+    // Search initializer function.  Takes in a depth limit, and returns the "best" move
+    public Move search(int depth){
+        // Initialize a temp variable to store our current "max" value
+        double max;
+        // If it is white's move, then set the max to a ridiculously low number.  This way, it can be overwritten by pretty much any move
+        if(sideToMove == 0) max = -10000;
+            // Otherwise, set the max to a high number.
+        else max = 10000;
+        // Initialize a variable to store the "best" move
+        Move finalMove = null;
+        // Iterate through all possible moves
+        for(Move m : possibleMoves()){
+            // If (for some reason), we end up with a blank move, we can assume that there are no possible moves
+            if(m == null){
+                // Thus we exit
+                System.out.println("No legal moves");
+                System.exit(0);
             }
-            for(int j = 1; j <= 8; j++){
-                switch(this.squares[i+j]){
-                    case 0:
-                        s += "-|";
-                        break;
-                    case 1:
-                        s += "P|";
-                        break;
-                    case 2:
-                        s += "N|";
-                        break;
-                    case 3:
-                        s += "B|";
-                        break;
-                    case 4:
-                        s += "R|";
-                        break;
-                    case 5:
-                        s += "Q|";
-                        break;
-                    case 6:
-                        s += "K|";
-                        break;
-                    case 7:
-                        s += "p|";
-                        break;
-                    case 8:
-                        s += "n|";
-                        break;
-                    case 9:
-                        s += "b|";
-                        break;
-                    case 10:
-                        s += "r|";
-                        break;
-                    case 11:
-                        s += "q|";
-                        break;
-                    case 12:
-                        s += "k|";
-                        break;
-                    case 13:
-                        s += "*|";
-                        break;
-                    default:
-                        break;
+            // Make the move for the current iteration
+            m.move();
+            // Call the Alpha/Beta function (start with max), and store it in a temporary variable
+            double x = alphaBetaMax(-1000000,1000000,depth-1);
+            // Output the move we are looking at, as well as whatever Alpha/Beta says for its value
+            System.out.println(m+" : "+x);
+            // Undo the move so that we're back to the previous state
+            m.undoMove();
+            // If it is white's move
+            if(sideToMove == 0) {
+                // And if the value returned by Alpha/Beta is GREATER than (or equal to) our current "best move"
+                if (x >= max) {
+                    // Set the best move to our new move
+                    max = x;
+                    finalMove = m;
                 }
             }
-            s += "\n";
-            s += "   ________________\n";
+            // If it is black's move
+            else {
+                // And if the value returned by Alpha/Beta is LESS than (or equal to) our current "best move"
+                if (x <= max) {
+                    // Set the best move to our new move
+                    max = x;
+                    finalMove = m;
+                }
+            }
         }
-        s += "   A B C D E F G H";
-        return s;
+        // Return the "best" move
+        return finalMove;
+    }
+    
+    // Relatively generic implementation of Alpha Beta (Max side)
+    // Takes in an alpha value (initially an infinitely negative value), a beta value (initially an infinitely positive value), and a depth to search to
+    public double alphaBetaMax(double alpha, double beta, int depth){
+        // Initialize the score to alpha
+        double score = alpha;
+        // Increment the number of nodes searched
+        Main.NODECOUNT++;
+        // Base case: If we're at the bottom of the tree, evaluate the board and return
+        if (depth == 0){
+            double d = this.evaluate();
+            hmap.put(this.hashCode(),d);
+            return d;
+        }
+        // Iterate through all possible moves
+        for(Move m : possibleMoves()){
+            // Do the move
+            m.move();
+            // Check if the hmap contains this board
+            if(hmap.containsKey(this.hashCode())){
+                double d = hmap.get(this.hashCode());
+                m.undoMove();
+                Main.COLLISIONCOUNT++;
+                return d;
+            }
+            // If that move we just did ends the game
+            if(result > -1) {
+                // Evaluate the board
+                double eval = evaluate();
+                // Undo the move to return to our previous state
+                m.undoMove();
+                // Return the board evaluation
+                return eval;
+            }
+            // Run Alpha/Beta (min)
+            score = alphaBetaMin(alpha, beta, depth-1);
+            // Undo the move to return to our previous state
+            m.undoMove();
+            // If our score somehow ends up higher than beta, then we cut the line (pruning)
+            if(score>= beta) return beta;
+            // If the score is greater than alpha, set alpha to the score
+            if(score>alpha) alpha = score;
+        }
+        // Return alpha
+        return alpha;
+    }
+    
+    // Same idea as with Alpha/Beta Max, except we switch the side for which we are evaluating
+    public double alphaBetaMin(double alpha, double beta, int depth){
+        double score = beta;
+        Main.NODECOUNT++;
+        if (depth == 0){
+            double d = this.evaluate();
+            hmap.put(this.hashCode(),d);
+            return d;
+        }
+        for(Move m : possibleMoves()){
+            if(m == null) return beta;
+            m.move();
+            if(hmap.containsKey(this.hashCode())){
+                double d = hmap.get(this.hashCode());
+                m.undoMove();
+                Main.COLLISIONCOUNT++;
+                return d;
+            }
+            if(result > -1) {
+                double eval = evaluate();
+                m.undoMove();
+                return eval;
+            }
+            score = alphaBetaMax(alpha, beta, depth-1);
+            m.undoMove();
+            if(score <= alpha) return alpha;
+            if(score < beta) beta = score;
+        }
+        return beta;
     }
 
+    
+    // Evaluation Functions
     public double evaluate(){
         double val = 0.0;
         // Number of pawns for each team
@@ -248,7 +315,36 @@ public class Board {
         }
         // return the score of the board
         return val;
-    }
+    }   
+    
+    public ArrayList<Integer> getDoubledPawns(int s){
+        ArrayList<Integer> vals = new ArrayList<Integer>();
+        // Use 31 to 88 because pawns can't exist on the back ranks for either side
+        for(int i = 31; i <= 88; i++){
+            // Get black doubled pawns
+            if(squares[i] == 7 && s == 1){
+                for(int j = i; j<=98; j+= 10){
+                    if(squares[j] == 7){
+                        vals.add(i);
+                        vals.add(j);
+                    }
+                }
+            }
+            // Get white doubled pawns
+            else if(squares[i] == 1 && s == 0){
+                for(int j = i; j>=21; j-= 10){
+                    if(squares[j] == 1){
+                        vals.add(i);
+                        vals.add(j);
+                    }
+                }
+            }
+        }
+        return vals;
+    }    
+    
+    
+    // Move Generation Functions
     // Function that generates the possible moves that the piece aat a given square can make
     public ArrayList<Integer> calculateMoves(int index){
         ArrayList<Integer> result = new ArrayList<Integer>();
@@ -715,6 +811,7 @@ public class Board {
         }
         return result;
     }
+    
     // Generate a list of possible moves that the current side to move can make
     public ArrayList<Move> possibleMoves(){
         // Initialize a new Array List to store our moves
@@ -735,128 +832,129 @@ public class Board {
         // Return the list of legal moves
         return availableMoves;
     }
-    // Search initializer function.  Takes in a depth limit, and returns the "best" move
-    public Move search(int depth){
-        // Initialize a temp variable to store our current "max" value
-        double max;
-        // If it is white's move, then set the max to a ridiculously low number.  This way, it can be overwritten by pretty much any move
-        if(sideToMove == 0) max = -10000;
-            // Otherwise, set the max to a high number.
-        else max = 10000;
-        // Initialize a variable to store the "best" move
-        Move finalMove = null;
-        // Iterate through all possible moves
-        for(Move m : possibleMoves()){
-            // If (for some reason), we end up with a blank move, we can assume that there are no possible moves
-            if(m == null){
-                // Thus we exit
-                System.out.println("No legal moves");
-                System.exit(0);
+
+
+    // Utility Functions
+    @Override
+    public String toString(){
+        String s = "";
+        s += "   ________________\n";
+        for(int i = 20; i <= 90; i += 10){
+            if(i%10 == 0){
+                s+= ""+(100-i)/10+" |";
             }
-            // Make the move for the current iteration
-            m.move();
-            // Call the Alpha/Beta function (start with max), and store it in a temporary variable
-            double x = alphaBetaMax(-1000000,1000000,depth-1);
-            // Output the move we are looking at, as well as whatever Alpha/Beta says for its value
-            System.out.println(m+" : "+x);
-            // Undo the move so that we're back to the previous state
-            m.undoMove();
-            // If it is white's move
-            if(sideToMove == 0) {
-                // And if the value returned by Alpha/Beta is GREATER than (or equal to) our current "best move"
-                if (x >= max) {
-                    // Set the best move to our new move
-                    max = x;
-                    finalMove = m;
+            for(int j = 1; j <= 8; j++){
+                switch(this.squares[i+j]){
+                    case 0:
+                        s += "-|";
+                        break;
+                    case 1:
+                        s += "P|";
+                        break;
+                    case 2:
+                        s += "N|";
+                        break;
+                    case 3:
+                        s += "B|";
+                        break;
+                    case 4:
+                        s += "R|";
+                        break;
+                    case 5:
+                        s += "Q|";
+                        break;
+                    case 6:
+                        s += "K|";
+                        break;
+                    case 7:
+                        s += "p|";
+                        break;
+                    case 8:
+                        s += "n|";
+                        break;
+                    case 9:
+                        s += "b|";
+                        break;
+                    case 10:
+                        s += "r|";
+                        break;
+                    case 11:
+                        s += "q|";
+                        break;
+                    case 12:
+                        s += "k|";
+                        break;
+                    case 13:
+                        s += "*|";
+                        break;
+                    default:
+                        break;
                 }
             }
-            // If it is black's move
-            else {
-                // And if the value returned by Alpha/Beta is LESS than (or equal to) our current "best move"
-                if (x <= max) {
-                    // Set the best move to our new move
-                    max = x;
-                    finalMove = m;
-                }
-            }
+            s += "\n";
+            s += "   ________________\n";
         }
-        // Return the "best" move
-        return finalMove;
+        s += "   A B C D E F G H";
+        return s;
     }
-    // Relatively generic implementation of Alpha Beta (Max side)
-    // Takes in an alpha value (initially an infinitely negative value), a beta value (initially an infinitely positive value), and a depth to search to
-    public double alphaBetaMax(double alpha, double beta, int depth){
-        // Initialize the score to alpha
-        double score = alpha;
-        // Increment the number of nodes searched
-        Main.NODECOUNT++;
-        // Base case: If we're at the bottom of the tree, evaluate the board and return
-        if (depth == 0){
-            double d = this.evaluate();
-            hmap.put(this.hashCode(),d);
-            return d;
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || this.getClass() != obj.getClass()) {
+            return false;
         }
-        // Iterate through all possible moves
-        for(Move m : possibleMoves()){
-            // Do the move
-            m.move();
-            // Check if the hmap contains this board
-            if(hmap.containsKey(this.hashCode())){
-                double d = hmap.get(this.hashCode());
-                m.undoMove();
-                Main.COLLISIONCOUNT++;
-                return d;
-            }
-            // If that move we just did ends the game
-            if(result > -1) {
-                // Evaluate the board
-                double eval = evaluate();
-                // Undo the move to return to our previous state
-                m.undoMove();
-                // Return the board evaluation
-                return eval;
-            }
-            // Run Alpha/Beta (min)
-            score = alphaBetaMin(alpha, beta, depth-1);
-            // Undo the move to return to our previous state
-            m.undoMove();
-            // If our score somehow ends up higher than beta, then we cut the line (pruning)
-            if(score>= beta) return beta;
-            // If the score is greater than alpha, set alpha to the score
-            if(score>alpha) alpha = score;
-        }
-        // Return alpha
-        return alpha;
+        Board other = (Board) obj;
+        return this.squares == other.squares
+                && this.sideToMove == other.sideToMove
+                && this.result == other.result
+                && this.enPassant == other.enPassant
+                && this.castling == other.castling;
     }
-    // Same idea as with Alpha/Beta Max, except we switch the side for which we are evaluating
-    public double alphaBetaMin(double alpha, double beta, int depth){
-        double score = beta;
-        Main.NODECOUNT++;
-        if (depth == 0){
-            double d = this.evaluate();
-            hmap.put(this.hashCode(),d);
-            return d;
+    
+    @Override
+    public int hashCode(){
+        final int prime = 31;
+        int r = 1;
+        r = prime * r + Arrays.hashCode(this.squares);
+        r = prime * r + this.sideToMove;
+        r = prime * r + this.result;
+        r = prime * r + this.enPassant;
+        r = prime * r + Arrays.hashCode(this.castling);
+        return r;
+    }
+    
+    public String intToPiece(int i){
+        switch(i){
+            case 1:
+                return "P";
+            case 2:
+                return "N";
+            case 3:
+                return "B";
+            case 4:
+                return "R";
+            case 5:
+                return "Q";
+            case 6:
+                return "K";
+            case 7:
+                return "p";
+            case 8:
+                return "n";
+            case 9:
+                return "b";
+            case 10:
+                return "r";
+            case 11:
+                return "q";
+            case 12:
+                return "k";
+            default:
+                return "";
+                        
         }
-        for(Move m : possibleMoves()){
-            if(m == null) return beta;
-            m.move();
-            if(hmap.containsKey(this.hashCode())){
-                double d = hmap.get(this.hashCode());
-                m.undoMove();
-                Main.COLLISIONCOUNT++;
-                return d;
-            }
-            if(result > -1) {
-                double eval = evaluate();
-                m.undoMove();
-                return eval;
-            }
-            score = alphaBetaMax(alpha, beta, depth-1);
-            m.undoMove();
-            if(score <= alpha) return alpha;
-            if(score < beta) beta = score;
-        }
-        return beta;
+    
     }
 
     public String indexToCoordinates(int index){
@@ -893,89 +991,5 @@ public class Board {
         s+= 9-(i/10 + 1);
         return s;
     }
-
-    public ArrayList<Integer> getDoubledPawns(int s){
-        ArrayList<Integer> vals = new ArrayList<Integer>();
-        // Use 31 to 88 because pawns can't exist on the back ranks for either side
-        for(int i = 31; i <= 88; i++){
-            // Get black doubled pawns
-            if(squares[i] == 7 && s == 1){
-                for(int j = i; j<=98; j+= 10){
-                    if(squares[j] == 7){
-                        vals.add(i);
-                        vals.add(j);
-                    }
-                }
-            }
-            // Get white doubled pawns
-            else if(squares[i] == 1 && s == 0){
-                for(int j = i; j>=21; j-= 10){
-                    if(squares[j] == 1){
-                        vals.add(i);
-                        vals.add(j);
-                    }
-                }
-            }
-        }
-        return vals;
-    }
     
-    public String intToPiece(int i){
-        switch(i){
-            case 1:
-                return "P";
-            case 2:
-                return "N";
-            case 3:
-                return "B";
-            case 4:
-                return "R";
-            case 5:
-                return "Q";
-            case 6:
-                return "K";
-            case 7:
-                return "p";
-            case 8:
-                return "n";
-            case 9:
-                return "b";
-            case 10:
-                return "r";
-            case 11:
-                return "q";
-            case 12:
-                return "k";
-            default:
-                return "";
-                        
-        }
-    }
-
-    @Override
-    public int hashCode(){
-        final int prime = 31;
-        int r = 1;
-        r = prime * r + Arrays.hashCode(this.squares);
-        r = prime * r + this.sideToMove;
-        r = prime * r + this.result;
-        r = prime * r + this.enPassant;
-        r = prime * r + Arrays.hashCode(this.castling);
-        return r;
-
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || this.getClass() != obj.getClass()) {
-            return false;
-        }
-        Board other = (Board) obj;
-        return this.squares == other.squares
-                && this.sideToMove == other.sideToMove
-                && this.result == other.result
-                && this.enPassant == other.enPassant
-                && this.castling == other.castling;
-    }
 }
