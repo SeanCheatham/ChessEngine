@@ -118,10 +118,10 @@ public class Move {
     }
 
     public String toString() {
-        return "(" + fromPiece + ")"
-                +from
+        return "(" + board.intToPiece(fromPiece) + ")"
+                +board.indexToCoordinates(from)
                 + ((toPiece != 0) ? " X " : " -> ")
-                + "(" + toPiece + ")"
-                +to;
+                + "(" + board.intToPiece(toPiece) + ")"
+                +board.indexToCoordinates(to);
     }
 }

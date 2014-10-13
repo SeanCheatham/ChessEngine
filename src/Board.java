@@ -1,7 +1,7 @@
 // Copyright (C) 2014; Sean Cheatham
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Hashtable;
+import java.util.HashMap;
 
 public class Board {
     // Array of integers to represent piece types
@@ -17,8 +17,8 @@ public class Board {
     // Array of white pieces
     // Counter to keep track of move
     public int moveCount;
-    // Hashtable to keep track of previous moves and their evaluations
-    Hashtable<Integer,Double> htable;
+    // HashMap to keep track of previous moves and their evaluations
+    HashMap<Integer,Double> hmap;
 
     public Board(){
         // 120 bit board is setup as follows:
@@ -54,7 +54,7 @@ public class Board {
         12=k
         13=* (out of bounds)
          */
-
+        /*
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -69,8 +69,8 @@ public class Board {
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
         };
-
-/*
+        */
+        
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -84,7 +84,7 @@ public class Board {
                 13, 4, 2, 3, 5, 6, 3, 2, 4, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
-        };*/
+        };
         /*
         squares = new int[]{
                 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
@@ -106,7 +106,7 @@ public class Board {
         castling = new int[] {1,1,1,1};
         enPassant = -1;
         moveCount = 1;
-        htable = new Hashtable<Integer,Double>();
+        hmap = new HashMap<Integer,Double>();
     }
 
     //Copy constructor
@@ -117,7 +117,7 @@ public class Board {
         this.castling = b.castling;
         this.enPassant = b.enPassant;
         this.moveCount = b.moveCount;
-        this.htable = b.htable;
+        this.hmap = b.hmap;
     }
 
     @Override
@@ -793,16 +793,16 @@ public class Board {
         // Base case: If we're at the bottom of the tree, evaluate the board and return
         if (depth == 0){
             double d = this.evaluate();
-            htable.put(this.hashCode(),d);
+            hmap.put(this.hashCode(),d);
             return d;
         }
         // Iterate through all possible moves
         for(Move m : possibleMoves()){
             // Do the move
             m.move();
-            // Check if the htable contains this board
-            if(htable.containsKey(this.hashCode())){
-                double d = htable.get(this.hashCode());
+            // Check if the hmap contains this board
+            if(hmap.containsKey(this.hashCode())){
+                double d = hmap.get(this.hashCode());
                 m.undoMove();
                 Main.COLLISIONCOUNT++;
                 return d;
@@ -834,14 +834,14 @@ public class Board {
         Main.NODECOUNT++;
         if (depth == 0){
             double d = this.evaluate();
-            htable.put(this.hashCode(),d);
+            hmap.put(this.hashCode(),d);
             return d;
         }
         for(Move m : possibleMoves()){
             if(m == null) return beta;
             m.move();
-            if(htable.containsKey(this.hashCode())){
-                double d = htable.get(this.hashCode());
+            if(hmap.containsKey(this.hashCode())){
+                double d = hmap.get(this.hashCode());
                 m.undoMove();
                 Main.COLLISIONCOUNT++;
                 return d;
@@ -918,6 +918,38 @@ public class Board {
             }
         }
         return vals;
+    }
+    
+    public String intToPiece(int i){
+        switch(i){
+            case 1:
+                return "P";
+            case 2:
+                return "N";
+            case 3:
+                return "B";
+            case 4:
+                return "R";
+            case 5:
+                return "Q";
+            case 6:
+                return "K";
+            case 7:
+                return "p";
+            case 8:
+                return "n";
+            case 9:
+                return "b";
+            case 10:
+                return "r";
+            case 11:
+                return "q";
+            case 12:
+                return "k";
+            default:
+                return "";
+                        
+        }
     }
 
     @Override

@@ -1,7 +1,7 @@
 // Copyright (C) 2014; Sean Cheatham
 public class Main {
     // Config Declarations, because this looks like a good spot for them
-    final public static int MAXDEPTH = 20;
+    final public static int MAXDEPTH = 8;
     // Global Variables
     public static int NODECOUNT = 0;
     public static int COLLISIONCOUNT = 0;
@@ -17,7 +17,7 @@ public class Main {
         // Re-read the time
         long t2 = System.currentTimeMillis();
         // So, Mr. Engine, what move did you come up with?
-        System.out.println("Recommended Move: "+m.fromPiece+b.indexToCoordinates(m.to));
+        System.out.println("Recommended Move: "+m.toString());
         // And how long did you take, Mr. Engine?
         long time = t2-t1 + 1000;
         // Make the move that the engine came up with
