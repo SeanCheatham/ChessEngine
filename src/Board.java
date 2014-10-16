@@ -144,7 +144,7 @@ public class Board {
             // Make the move for the current iteration
             m.move();
             // Call the Alpha/Beta function (start with max), and store it in a temporary variable
-            double x = alphaBetaMax(-1000000,1000000,depth-1);
+            double x = alphaBetaMin(-1000000,1000000,depth-1);
             // Output the move we are looking at, as well as whatever Alpha/Beta says for its value
             System.out.println(m+" : "+x);
             // Undo the move so that we're back to the previous state
@@ -179,6 +179,13 @@ public class Board {
         double score = alpha;
         // Increment the number of nodes searched
         Main.NODECOUNT++;
+
+        // Check if the hmap contains this board
+        if(hmap.containsKey(this.hashCode())){
+            double d = hmap.get(this.hashCode());
+            Main.COLLISIONCOUNT++;
+            return d;
+        }
         // Base case: If we're at the bottom of the tree, evaluate the board and return
         if (depth == 0){
             double d = this.evaluate();
@@ -189,13 +196,7 @@ public class Board {
         for(Move m : possibleMoves()){
             // Do the move
             m.move();
-            // Check if the hmap contains this board
-            if(hmap.containsKey(this.hashCode())){
-                double d = hmap.get(this.hashCode());
-                m.undoMove();
-                Main.COLLISIONCOUNT++;
-                return d;
-            }
+
             // If that move we just did ends the game
             if(result > -1) {
                 // Evaluate the board
@@ -222,6 +223,11 @@ public class Board {
     public double alphaBetaMin(double alpha, double beta, int depth){
         double score = beta;
         Main.NODECOUNT++;
+        if(hmap.containsKey(this.hashCode())){
+            double d = hmap.get(this.hashCode());
+            Main.COLLISIONCOUNT++;
+            return d;
+        }
         if (depth == 0){
             double d = this.evaluate();
             hmap.put(this.hashCode(),d);
@@ -230,12 +236,7 @@ public class Board {
         for(Move m : possibleMoves()){
             if(m == null) return beta;
             m.move();
-            if(hmap.containsKey(this.hashCode())){
-                double d = hmap.get(this.hashCode());
-                m.undoMove();
-                Main.COLLISIONCOUNT++;
-                return d;
-            }
+
             if(result > -1) {
                 double eval = evaluate();
                 m.undoMove();
