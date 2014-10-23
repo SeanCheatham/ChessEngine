@@ -55,53 +55,7 @@ public class Board {
         13=* (out of bounds)
          */
         
-        squares = new int[]{
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 0, 12, 0, 10, 0, 9, 10, 0, 13,
-                13, 7, 0, 11, 0, 8, 7, 0, 0, 13,
-                13, 7, 8, 7, 0, 7, 0, 0, 0, 13,
-                13, 0, 0, 2, 7, 1, 9, 0, 7, 13,
-                13, 1, 1, 0, 1, 0, 0, 7, 0, 13,
-                13, 0, 0, 1, 0, 0, 0, 0, 0, 13,
-                13, 0, 0, 0, 0, 5, 1, 1, 1, 13,
-                13, 4, 0, 3, 0, 2, 4, 6, 0, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13
-        };
-        
-        /*
-        squares = new int[]{
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 10, 8, 9, 11, 12, 9, 8, 10, 13,
-                13, 7, 7, 7, 7, 7, 7, 7, 7, 13,
-                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
-                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
-                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
-                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
-                13, 1, 1, 1, 1, 1, 1, 1, 1, 13,
-                13, 4, 2, 3, 5, 6, 3, 2, 4, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13
-        };
-        */
-        /*
-        squares = new int[]{
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
-                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
-                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
-                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
-                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
-                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
-                13, 0, 0, 0, 0, 0, 0, 0, 0, 13,
-                13, 0, 0, 0, 0, 6, 0, 0, 4, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13
-        };
-        */
+        squares = Globals.DEFAULTBOARD;
         sideToMove = 0;
         result = -1;
         castling = new int[] {1,1,1,1};
@@ -178,12 +132,12 @@ public class Board {
         // Initialize the score to alpha
         double score = alpha;
         // Increment the number of nodes searched
-        Main.NODECOUNT++;
+        Globals.NODECOUNT++;
 
         // Check if the hmap contains this board
         if(hmap.containsKey(this.hashCode())){
             double d = hmap.get(this.hashCode());
-            Main.COLLISIONCOUNT++;
+            Globals.NODECOUNT++;
             return d;
         }
         // Base case: If we're at the bottom of the tree, evaluate the board and return
@@ -211,7 +165,10 @@ public class Board {
             // Undo the move to return to our previous state
             m.undoMove();
             // If our score somehow ends up higher than beta, then we cut the line (pruning)
-            if(score>= beta) return beta;
+            if(score>= beta){
+                Globals.BRANCHESPRUNED++;
+                return beta;
+            }
             // If the score is greater than alpha, set alpha to the score
             if(score>alpha) alpha = score;
         }
@@ -222,10 +179,10 @@ public class Board {
     // Same idea as with Alpha/Beta Max, except we switch the side for which we are evaluating
     public double alphaBetaMin(double alpha, double beta, int depth){
         double score = beta;
-        Main.NODECOUNT++;
+        Globals.NODECOUNT++;
         if(hmap.containsKey(this.hashCode())){
             double d = hmap.get(this.hashCode());
-            Main.COLLISIONCOUNT++;
+            Globals.NODECOUNT++;
             return d;
         }
         if (depth == 0){
@@ -244,7 +201,10 @@ public class Board {
             }
             score = alphaBetaMax(alpha, beta, depth-1);
             m.undoMove();
-            if(score <= alpha) return alpha;
+            if(score <= alpha){
+                Globals.BRANCHESPRUNED++;
+                return alpha;
+            }
             if(score < beta) beta = score;
         }
         return beta;
@@ -253,6 +213,7 @@ public class Board {
     
     // Evaluation Functions
     public double evaluate(){
+        Globals.NODESEVALUATED++;
         double val = 0.0;
         // Number of pawns for each team
         // If there are fewer than 8 pawns on the board, the game is considered "open".  Else, game is considered "closed".
