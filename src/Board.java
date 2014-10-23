@@ -55,20 +55,7 @@ public class Board {
         13=* (out of bounds)
          */
         
-        squares = new int[]{
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 0, 12, 0, 10, 0, 9, 10, 0, 13,
-                13, 7, 0, 11, 0, 8, 7, 0, 0, 13,
-                13, 7, 8, 7, 0, 7, 0, 0, 0, 13,
-                13, 0, 0, 2, 7, 1, 9, 0, 7, 13,
-                13, 1, 1, 0, 1, 0, 0, 7, 0, 13,
-                13, 0, 0, 1, 0, 0, 0, 0, 0, 13,
-                13, 0, 0, 0, 0, 5, 1, 1, 1, 13,
-                13, 4, 0, 3, 0, 2, 4, 6, 0, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13
-        };
+        squares = Globals.INITIALBOARD;
         
         /*
         squares = new int[]{
@@ -178,12 +165,12 @@ public class Board {
         // Initialize the score to alpha
         double score = alpha;
         // Increment the number of nodes searched
-        Main.NODECOUNT++;
+        Globals.NODECOUNT++;
 
         // Check if the hmap contains this board
         if(hmap.containsKey(this.hashCode())){
             double d = hmap.get(this.hashCode());
-            Main.COLLISIONCOUNT++;
+            Globals.NODECOUNT++;
             return d;
         }
         // Base case: If we're at the bottom of the tree, evaluate the board and return
@@ -222,10 +209,10 @@ public class Board {
     // Same idea as with Alpha/Beta Max, except we switch the side for which we are evaluating
     public double alphaBetaMin(double alpha, double beta, int depth){
         double score = beta;
-        Main.NODECOUNT++;
+        Globals.NODECOUNT++;
         if(hmap.containsKey(this.hashCode())){
             double d = hmap.get(this.hashCode());
-            Main.COLLISIONCOUNT++;
+            Globals.NODECOUNT++;
             return d;
         }
         if (depth == 0){
@@ -253,6 +240,7 @@ public class Board {
     
     // Evaluation Functions
     public double evaluate(){
+        Globals.NODESEVALUATED++;
         double val = 0.0;
         // Number of pawns for each team
         // If there are fewer than 8 pawns on the board, the game is considered "open".  Else, game is considered "closed".
