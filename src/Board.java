@@ -1,6 +1,8 @@
 // Copyright (C) 2014; Sean Cheatham
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 public class Board {
@@ -55,7 +57,7 @@ public class Board {
         13=* (out of bounds)
          */
         
-        squares = Globals.DEFAULTBOARD;
+        squares = Globals.PUZZLEBOARD;
         sideToMove = 0;
         result = -1;
         castling = new int[] {1,1,1,1};
@@ -793,7 +795,25 @@ public class Board {
             }
         }
         // Return the list of legal moves
-        return availableMoves;
+        return sortMoves(availableMoves);
+    }
+    
+    // Sort the list of possible moves based on the evaluation of performing each move
+    public ArrayList<Move> sortMoves(ArrayList<Move> moves){
+        Collections.sort(moves, new Comparator<Move>() {
+            @Override public int compare(Move m1, Move m2){
+                m1.move();
+                double e1 = evaluate();
+                m1.undoMove();
+                m2.move();
+                double e2 = evaluate();
+                m2.undoMove();
+                if(e1 < e2) return -1;
+                if(e2 > e1) return 1;
+                return 0;
+            }
+        });
+        return moves;
     }
 
 
