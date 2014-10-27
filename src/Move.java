@@ -47,28 +47,49 @@ public class Move {
         // Castling
         // White King Side
         if(fromPiece == 6 && from == 95 && to == 97){
+            if(board.castling[0] == 0){
+                System.out.println("Illegal Move");
+                System.exit(-1);
+            }
             board.squares[98] = 0;
             board.squares[96] = 4;
             board.castling[0] = 0;
         }
         // White Queen Side
         if(fromPiece == 6 && from == 95 && to == 93){
+            if(board.castling[1] == 0){
+                System.out.println("Illegal Move");
+                System.exit(-1);
+            }
             board.squares[91] = 0;
             board.squares[94] = 4;
             board.castling[1] = 0;
         }
         // Black King Side
         if(fromPiece == 12 && from == 25 && to == 27){
+            if(board.castling[2] == 0){
+                System.out.println("Illegal Move");
+                System.exit(-1);
+            }
             board.squares[28] = 0;
             board.squares[26] = 10;
             board.castling[2] = 0;
         }
         // Black Queen Side
         if(fromPiece == 12 && from == 25 && to == 23){
+            if(board.castling[3] == 0){
+                System.out.println("Illegal Move");
+                System.exit(-1);
+            }
             board.squares[21] = 0;
             board.squares[24] = 10;
             board.castling[3] = 0;
         }
+        // Detect King/Rook moves and disable castling
+        if((fromPiece == 6 && from == 95) || (fromPiece == 4 && from == 98))  board.castling[0] = 0;
+        if((fromPiece == 6 && from == 95) || (fromPiece == 4 && from == 91))  board.castling[1] = 0;
+        if((fromPiece == 12 && from == 25) || (fromPiece == 10 && from == 28))  board.castling[2] = 0;
+        if((fromPiece == 12 && from == 25) || (fromPiece == 10 && from == 91))  board.castling[3] = 0;
     }
 
     // Undo the move
@@ -114,7 +135,11 @@ public class Move {
             board.squares[24] = 0;
             board.castling[3] = 1;
         }
-
+        // FIX ME
+        if((fromPiece == 6 && from == 95) || (fromPiece == 4 && from == 98))  board.castling[0] = 1;
+        if((fromPiece == 6 && from == 95) || (fromPiece == 4 && from == 91))  board.castling[1] = 1;
+        if((fromPiece == 12 && from == 25) || (fromPiece == 10 && from == 28))  board.castling[2] = 1;
+        if((fromPiece == 12 && from == 25) || (fromPiece == 10 && from == 91))  board.castling[3] = 1;
     }
 
     @Override
