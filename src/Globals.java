@@ -4,7 +4,7 @@
 public class Globals {
 
     // Config Variables
-    final public static int MAXDEPTH = 6;
+    public static int MAXDEPTH = 8;
 
     // Global Variables
     public static int NODECOUNT = 0;

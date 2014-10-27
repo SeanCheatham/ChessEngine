@@ -63,7 +63,7 @@ public class Board {
         castling = new int[] {1,1,1,1};
         enPassant = -1;
         moveCount = 1;
-        hmap = new HashMap<Integer,Double>();
+        hmap = new HashMap<Integer,Double>(1024000);
     }
 
     //Copy constructor
@@ -808,8 +808,8 @@ public class Board {
                 m2.move();
                 double e2 = evaluate();
                 m2.undoMove();
-                if(e1 < e2) return -1;
-                if(e2 > e1) return 1;
+                if((e1 < e2 && sideToMove == 0) || (e1 > e2 && sideToMove == 1)) return -1;
+                if((e1 > e2 && sideToMove == 0) || (e1 < e2 && sideToMove == 1)) return 1;
                 return 0;
             }
         });
