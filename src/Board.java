@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class Board {
     // Array of integers to represent piece types
@@ -20,7 +22,7 @@ public class Board {
     // Counter to keep track of move
     public int moveCount;
     // HashMap to keep track of previous moves and their evaluations
-    HashMap<Integer,Double> hmap;
+    Map<Integer,Double> hmap;
 
     public Board(){
         // 120 bit board is setup as follows:
@@ -63,7 +65,13 @@ public class Board {
         castling = new int[] {1,1,1,1};
         enPassant = -1;
         moveCount = 1;
-        hmap = new HashMap<Integer,Double>(4096000);
+        hmap = new LinkedHashMap<Integer, Double>(4096000, 0.75f, true) {
+              @Override
+              protected boolean removeEldestEntry(Map.Entry<Integer, Double> eldest)
+              {
+                return size() > Globals.MAX_HMAP_SIZE;
+              }
+          };
     }
 
     //Copy constructor
