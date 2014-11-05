@@ -63,7 +63,7 @@ public class Board {
         castling = new int[] {1,1,1,1};
         enPassant = -1;
         moveCount = 1;
-        hmap = new HashMap<Integer,Double>(1024000);
+        hmap = new HashMap<Integer,Double>(4096000);
     }
 
     //Copy constructor
@@ -135,18 +135,9 @@ public class Board {
         double score = alpha;
         // Increment the number of nodes searched
         Globals.NODECOUNT++;
-
-        // Check if the hmap contains this board
-        if(hmap.containsKey(this.hashCode())){
-            double d = hmap.get(this.hashCode());
-            Globals.NODECOUNT++;
-            return d;
-        }
         // Base case: If we're at the bottom of the tree, evaluate the board and return
         if (depth == 0){
-            double d = this.evaluate();
-            hmap.put(this.hashCode(),d);
-            return d;
+            return this.evaluate();
         }
         // Iterate through all possible moves
         for(Move m : possibleMoves()){
@@ -182,15 +173,8 @@ public class Board {
     public double alphaBetaMin(double alpha, double beta, int depth){
         double score = beta;
         Globals.NODECOUNT++;
-        if(hmap.containsKey(this.hashCode())){
-            double d = hmap.get(this.hashCode());
-            Globals.NODECOUNT++;
-            return d;
-        }
         if (depth == 0){
-            double d = this.evaluate();
-            hmap.put(this.hashCode(),d);
-            return d;
+            return this.evaluate();
         }
         for(Move m : possibleMoves()){
             if(m == null) return beta;
@@ -215,6 +199,10 @@ public class Board {
     
     // Evaluation Functions
     public double evaluate(){
+        if(hmap.containsKey(this.hashCode())){
+            double d = hmap.get(this.hashCode());
+            return d;
+        }
         Globals.NODESEVALUATED++;
         double val = 0.0;
         // Number of pawns for each team
@@ -278,8 +266,11 @@ public class Board {
                     break;
             }
         }
+        // Insert value into hash map
+        hmap.put(this.hashCode(),val);
         // return the score of the board
         return val;
+
     }   
     
     public ArrayList<Integer> getDoubledPawns(int s){
@@ -802,12 +793,15 @@ public class Board {
     public ArrayList<Move> sortMoves(ArrayList<Move> moves){
         Collections.sort(moves, new Comparator<Move>() {
             @Override public int compare(Move m1, Move m2){
-                m1.move();
+                /*m1.move();
                 double e1 = evaluate();
                 m1.undoMove();
                 m2.move();
                 double e2 = evaluate();
-                m2.undoMove();
+                m2.undoMove();*/
+
+                int e2 = m1.fromPiece;
+                int e1 = m2.fromPiece;
                 if((e1 < e2 && sideToMove == 0) || (e1 > e2 && sideToMove == 1)) return -1;
                 if((e1 > e2 && sideToMove == 0) || (e1 < e2 && sideToMove == 1)) return 1;
                 return 0;

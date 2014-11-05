@@ -7,6 +7,8 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
+        System.out.println("Max Memory: "+Runtime.getRuntime().maxMemory());
+
         Globals.MAXDEPTH = getDepth();
         // Initialize a new board
         Board b = new Board();
