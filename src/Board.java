@@ -22,7 +22,7 @@ public class Board {
     // Counter to keep track of move
     public int moveCount;
     // HashMap to keep track of previous moves and their evaluations
-    Map<Integer,Double> hmap;
+    Map<Integer,Integer> hmap;
 
     public Board(){
         // 120 bit board is setup as follows:
@@ -65,9 +65,9 @@ public class Board {
         castling = new int[] {1,1,1,1};
         enPassant = -1;
         moveCount = 1;
-        hmap = new LinkedHashMap<Integer, Double>(4096000, 0.75f, true) {
+        hmap = new LinkedHashMap<Integer, Integer>(4096000, 0.75f, true) {
               @Override
-              protected boolean removeEldestEntry(Map.Entry<Integer, Double> eldest)
+              protected boolean removeEldestEntry(Map.Entry<Integer, Integer> eldest)
               {
                 return size() > Globals.MAX_HMAP_SIZE;
               }
@@ -90,11 +90,11 @@ public class Board {
     // Search initializer function.  Takes in a depth limit, and returns the "best" move
     public Move search(int depth){
         // Initialize a temp variable to store our current "max" value
-        double max;
+        int max;
         // If it is white's move, then set the max to a ridiculously low number.  This way, it can be overwritten by pretty much any move
-        if(sideToMove == 0) max = -10000;
+        if(sideToMove == 0) max = -10000000;
             // Otherwise, set the max to a high number.
-        else max = 10000;
+        else max = 10000000;
         // Initialize a variable to store the "best" move
         Move finalMove = null;
         // Iterate through all possible moves
@@ -108,7 +108,7 @@ public class Board {
             // Make the move for the current iteration
             m.move();
             // Call the Alpha/Beta function (start with max), and store it in a temporary variable
-            double x = alphaBetaMin(-1000000,1000000,depth-1);
+            int x = alphaBetaMin(-1000000,1000000,depth-1);
             // Output the move we are looking at, as well as whatever Alpha/Beta says for its value
             System.out.println(m+" : "+x);
             // Undo the move so that we're back to the previous state
@@ -138,9 +138,9 @@ public class Board {
     
     // Relatively generic implementation of Alpha Beta (Max side)
     // Takes in an alpha value (initially an infinitely negative value), a beta value (initially an infinitely positive value), and a depth to search to
-    public double alphaBetaMax(double alpha, double beta, int depth){
+    public int alphaBetaMax(int alpha, int beta, int depth){
         // Initialize the score to alpha
-        double score = alpha;
+        int score = alpha;
         // Increment the number of nodes searched
         Globals.NODECOUNT++;
         // Base case: If we're at the bottom of the tree, evaluate the board and return
@@ -155,7 +155,7 @@ public class Board {
             // If that move we just did ends the game
             if(result > -1) {
                 // Evaluate the board
-                double eval = evaluate();
+                int eval = evaluate();
                 // Undo the move to return to our previous state
                 m.undoMove();
                 // Return the board evaluation
@@ -178,8 +178,8 @@ public class Board {
     }
     
     // Same idea as with Alpha/Beta Max, except we switch the side for which we are evaluating
-    public double alphaBetaMin(double alpha, double beta, int depth){
-        double score = beta;
+    public int alphaBetaMin(int alpha, int beta, int depth){
+        int score = beta;
         Globals.NODECOUNT++;
         if (depth == 0){
             return this.evaluate();
@@ -189,7 +189,7 @@ public class Board {
             m.move();
 
             if(result > -1) {
-                double eval = evaluate();
+                int eval = evaluate();
                 m.undoMove();
                 return eval;
             }
@@ -206,13 +206,13 @@ public class Board {
 
     
     // Evaluation Functions
-    public double evaluate(){
+    public int evaluate(){
         if(hmap.containsKey(this.hashCode())){
-            double d = hmap.get(this.hashCode());
+            int d = hmap.get(this.hashCode());
             return d;
         }
         Globals.NODESEVALUATED++;
-        double val = 0.0;
+        int val = 0;
         // Number of pawns for each team
         // If there are fewer than 8 pawns on the board, the game is considered "open".  Else, game is considered "closed".
         int wPawns = 0;
@@ -235,45 +235,46 @@ public class Board {
         for(int i=21; i<=98; i++){
             switch(squares[i]){
                 case 1: // White Pawns have a value of 1
-                    val += 1;
-                    break;
-                case 2: // White knights have a value of 3 (times the weight of knights)
-                    val += 3*knightWeight;
-                    break;
-                case 3: // White bishops have a value of 3 (times the weight of the bishops)
-                    val += 3*bishopWeight;
-                    break;
-                case 4: // White rooks have a value of 5
-                    val += 5;
-                    break;
-                case 5: // White queens have a value of 10
-                    val += 10;
-                    break;
-                case 6: // White kings have a value of 1000
                     val += 1000;
                     break;
+                case 2: // White knights have a value of 3 (times the weight of knights)
+                    val += 3000*knightWeight;
+                    break;
+                case 3: // White bishops have a value of 3 (times the weight of the bishops)
+                    val += 3000*bishopWeight;
+                    break;
+                case 4: // White rooks have a value of 5
+                    val += 5000;
+                    break;
+                case 5: // White queens have a value of 10
+                    val += 10000;
+                    break;
+                case 6: // White kings have a value of 1000
+                    val += 1000000;
+                    break;
                 case 7: // Black pawns have a value of -1
-                    val -= 1;
+                    val -= 1000;
                     break;
                 case 8: // Black knights have a value of -3 (times the weight of the knights)
-                    val -= 3*knightWeight;
+                    val -= 3000*knightWeight;
                     break;
                 case 9: // Black bishops have a value of -3 (times the weight of the bishops)
-                    val -= 3*bishopWeight;
+                    val -= 3000*bishopWeight;
                     break;
                 case 10: // Black rooks have a value of -5
-                    val -= 5;
+                    val -= 5000;
                     break;
                 case 11: // Black queens have a value of -10
-                    val -= 10;
+                    val -= 10000;
                     break;
                 case 12: // Black kings have a value of -1000
-                    val -= 1000;
+                    val -= 1000000;
                     break;
                 default: // If we somehow ended up looking at something else (such as an empty or illegal square(0 or 13 respectively)), break
                     break;
             }
         }
+
         // Insert value into hash map
         hmap.put(this.hashCode(),val);
         // return the score of the board
