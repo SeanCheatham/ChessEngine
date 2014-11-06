@@ -5,6 +5,7 @@ public class Globals {
 
     // Config Variables
     public static int MAXDEPTH = 8;
+    public static int MAX_HMAP_SIZE = (int) (Runtime.getRuntime().maxMemory() / 128);
 
     // Global Variables
     public static int NODECOUNT = 0;
