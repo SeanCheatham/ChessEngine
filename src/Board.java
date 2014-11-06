@@ -789,19 +789,12 @@ public class Board {
         return sortMoves(availableMoves);
     }
     
-    // Sort the list of possible moves based on the evaluation of performing each move
+    // Sort the list of possible moves
     public ArrayList<Move> sortMoves(ArrayList<Move> moves){
         Collections.sort(moves, new Comparator<Move>() {
             @Override public int compare(Move m1, Move m2){
-                /*m1.move();
-                double e1 = evaluate();
-                m1.undoMove();
-                m2.move();
-                double e2 = evaluate();
-                m2.undoMove();*/
-
-                int e2 = m1.fromPiece;
-                int e1 = m2.fromPiece;
+                int e2 = m2.toPiece;
+                int e1 = m1.toPiece;
                 if((e1 < e2 && sideToMove == 0) || (e1 > e2 && sideToMove == 1)) return -1;
                 if((e1 > e2 && sideToMove == 0) || (e1 < e2 && sideToMove == 1)) return 1;
                 return 0;
