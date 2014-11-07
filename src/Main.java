@@ -5,14 +5,30 @@
 import java.util.Scanner;
 
 public class Main {
-
+    // Takes in two ints as arguments: Search Depth and Board Number
     public static void main(String[] args) {
+        int board = 1;
+        if (args.length == 2) {
+            try {
+                Globals.MAXDEPTH = Integer.parseInt(args[0]);
+            } catch (NumberFormatException e) {
+                System.err.println("Argument" + args[0] + " must be an integer.");
+                System.exit(1);
+            }
+            try {
+                board = Integer.parseInt(args[1]);
+            } catch (NumberFormatException e) {
+                System.err.println("Argument" + args[1] + " must be an integer.");
+                System.exit(1);
+            }
+
+        }
         System.out.println("Max Memory: "+Runtime.getRuntime().maxMemory());
 
-        Globals.MAXDEPTH = getDepth();
+        //Globals.MAXDEPTH = getDepth();
         // Initialize a new board
         Board b = new Board();
-        setBoard(b);
+        setBoard(b,board);
         // For debug purposes, I like to know how long the engine takes.  Record the time now, run the engine, record again
         long t1 = System.currentTimeMillis();
         // START YOUR ENGINES!!! Call the search(depth) function
@@ -44,11 +60,11 @@ public class Main {
         return result;
     }
     
-    static void setBoard(Board b){
-        System.out.println("Enter a board number (1 = default, 2 = puzzle): ");
+    static void setBoard(Board b, int i){
+        /*System.out.println("Enter a board number (1 = default, 2 = puzzle): ");
         Scanner in = new Scanner(System.in);
-        int result = in.nextInt();
-        switch(result){
+        int result = in.nextInt();*/
+        switch(i){
             case 1:
                 b.squares = Globals.DEFAULTBOARD;
                 break;

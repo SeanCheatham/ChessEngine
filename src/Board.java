@@ -207,10 +207,10 @@ public class Board {
     
     // Evaluation Functions
     public int evaluate(){
-        if(hmap.containsKey(this.hashCode())){
+        /*if(hmap.containsKey(this.hashCode())){
             int d = hmap.get(this.hashCode());
             return d;
-        }
+        }*/
         Globals.NODESEVALUATED++;
         int val = 0;
         // Number of pawns for each team
@@ -222,7 +222,7 @@ public class Board {
             if(squares[i]== 7) bPawns++;
         }
         // Doubled pawns tend to be bad, so we subtract a quarter point for each doubled pawn (meaning that a set of doubled pawns adds to a half point off)
-        val += getDoubledPawns(1).size()*0.25 - getDoubledPawns(0).size()*0.25;
+        val += getDoubledPawns(1).size()*250 - getDoubledPawns(0).size()*250;
         // Weight of knight pieces
         // This formula guarantees a weight between 0.75 and 1
         // If there are 16 pawns on the board, the game is "closed", and knights are more useful (thus weighted at 1.0)
