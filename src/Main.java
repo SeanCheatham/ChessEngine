@@ -29,19 +29,26 @@ public class Main {
         // Initialize a new board
         Board b = new Board();
         setBoard(b,board);
-        while(1==1) {
-            Move a = nextMove(b);
+        System.out.println("Please input a move. (ex. E2E4)");
+        while(b.result < 0) {
+            System.out.print((b.moveCount/2+1)+". ");
+            //Move a = nextMove(b);
+            //Move a = b.randomSearch();
+            Move a = b.search();
             a.move();
+            System.out.print(a);
             //System.out.println(a);
             //System.exit(1);
             // For debug purposes, I like to know how long the engine takes.  Record the time now, run the engine, record again
             long t1 = System.currentTimeMillis();
             // START YOUR ENGINES!!! Call the search(depth) function
-            Move m = b.search(Globals.MAXDEPTH);
+            Move m = b.search();
+            //Move m = b.randomSearch();
             // Re-read the time
             long t2 = System.currentTimeMillis();
             // So, Mr. Engine, what move did you come up with?
-            System.out.println(m.toString());
+            System.out.print(" "+m.toString());
+            System.out.println();
             // And how long did you take, Mr. Engine?
             long time = t2 - t1 + 1000;
             // Make the move that the engine came up with
@@ -85,13 +92,20 @@ public class Main {
 
     static Move nextMove(Board board){
         Scanner in = new Scanner(System.in);
-        String s = in.nextLine();
+        String s = in.next();
+        if(s.equals("O-O")) return new Move(95,6,97,board.squares[97],board.moveCount,board.castling,board.enPassant,board);
+        if(s.equals("O-O-O")) return new Move(95,6,93,board.squares[93],board.moveCount,board.castling,board.enPassant,board);
+        if(s.equals("o-o")) return new Move(25,12,27,board.squares[27],board.moveCount,board.castling,board.enPassant,board);
+        if(s.equals("o-o-o")) return new Move(25,12,23,board.squares[23],board.moveCount,board.castling,board.enPassant,board);
+        if(s.length() != 4){
+            System.err.println("Invalid coordinate specified: "+s);
+            System.exit(1);
+        }
         String fromCoordinate = s.substring(0,2);
         String toCoordinate = s.substring(2, 4);
         int fromIndex = coordinateToIndex(fromCoordinate);
         int toIndex = coordinateToIndex(toCoordinate);
-        Move m = new Move(fromIndex,board.squares[fromIndex],toIndex,board.squares[toIndex],board.moveCount,board.castling,board.enPassant,board);
-        return m;
+        return new Move(fromIndex,board.squares[fromIndex],toIndex,board.squares[toIndex],board.moveCount,board.castling,board.enPassant,board);
 
     }
 

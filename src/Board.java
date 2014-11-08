@@ -1,11 +1,5 @@
 // Copyright (C) 2014; Sean Cheatham
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Board {
     // Array of integers to represent piece types
@@ -87,8 +81,16 @@ public class Board {
 
     
     // Search Functions
+
+    public Move randomSearch(){
+        ArrayList<Move> moves = possibleMoves();
+        Random rand = new Random();
+        int randomNum = rand.nextInt(moves.size());
+        return moves.get(randomNum);
+    }
     // Search initializer function.  Takes in a depth limit, and returns the "best" move
-    public Move search(int depth){
+    public Move search(){
+        int depth = Globals.MAXDEPTH;
         // Initialize a temp variable to store our current "max" value
         int max;
         // If it is white's move, then set the max to a ridiculously low number.  This way, it can be overwritten by pretty much any move
@@ -98,7 +100,9 @@ public class Board {
         // Initialize a variable to store the "best" move
         Move finalMove = null;
         // Iterate through all possible moves
-        for(Move m : possibleMoves()){
+        ArrayList<Move> moves = possibleMoves();
+        Collections.shuffle(moves);
+        for(Move m : moves){
             // If (for some reason), we end up with a blank move, we can assume that there are no possible moves
             if(m == null){
                 // Thus we exit
@@ -132,6 +136,7 @@ public class Board {
                 }
             }
         }
+        hmap.clear();
         // Return the "best" move
         return finalMove;
     }
