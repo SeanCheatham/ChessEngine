@@ -144,10 +144,11 @@ public class Move {
 
     @Override
     public String toString() {
-        return "(" + board.intToPiece(fromPiece) + ")"
+        return board.indexToCoordinates(from)+board.indexToCoordinates(to);
+        /*return "(" + board.intToPiece(fromPiece) + ")"
                 +board.indexToCoordinates(from)
                 + ((toPiece != 0) ? " X " : " -> ")
                 + "(" + board.intToPiece(toPiece) + ")"
-                +board.indexToCoordinates(to);
+                +board.indexToCoordinates(to);*/
     }
 }

@@ -110,7 +110,7 @@ public class Board {
             // Call the Alpha/Beta function (start with max), and store it in a temporary variable
             int x = alphaBetaMin(-1000000,1000000,depth-1);
             // Output the move we are looking at, as well as whatever Alpha/Beta says for its value
-            System.out.println(m+" : "+x);
+            //System.out.println(m+" : "+x);
             // Undo the move so that we're back to the previous state
             m.undoMove();
             // If it is white's move
@@ -207,10 +207,10 @@ public class Board {
     
     // Evaluation Functions
     public int evaluate(){
-        /*if(hmap.containsKey(this.hashCode())){
+        if(hmap.containsKey(this.hashCode())){
             int d = hmap.get(this.hashCode());
             return d;
-        }*/
+        }
         Globals.NODESEVALUATED++;
         int val = 0;
         // Number of pawns for each team
@@ -321,7 +321,7 @@ public class Board {
                 if((squares[index-9] >= 7 && squares[index-9] <= 12) || index-9 == enPassant) result.add(index-9);
                 if((squares[index-11] >= 7 && squares[index-11] <= 12) || index-11 == enPassant) result.add(index-11);
                 if(squares[index-10] == 0) result.add(index-10);
-                if(squares[index-20] == 0 && squares[index-10] == 0) result.add(index-20);
+                if(squares[index-20] == 0 && squares[index-10] == 0 && index > 80) result.add(index-20);
                 break;
             case 2: // White Knight
                 if((squares[index+8] >= 7 && squares[index+8] <13) || squares[index+8] == 0) result.add(index+8);
@@ -549,7 +549,7 @@ public class Board {
                 if((squares[index+9] >= 1 && squares[index+9] <= 6) || index+9 == enPassant) result.add(index+9);
                 if((squares[index+11] >= 1 && squares[index+11] <= 6) || index+11 == enPassant) result.add(index+11);
                 if(squares[index+10] == 0) result.add(index+10);
-                if(squares[index+20] == 0 && squares[index+10] == 0) result.add(index+20);
+                if(squares[index+20] == 0 && squares[index+10] == 0 && index < 29) result.add(index+20);
                 break;
             case 8: // Black Knight
                 if((squares[index+8] >= 1 && squares[index+8] <=6) || squares[index+8] == 0) result.add(index+8);
